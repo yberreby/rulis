@@ -18,3 +18,9 @@ fn it_works() {
 
     assert_eq!(grammar::parse_Program(src), Ok(expected));
 }
+
+#[test]
+fn invalid_code_is_rejected() {
+    let src = "+ 5 ((* 2 428)";
+    assert!(grammar::parse_Program(src).is_err());
+}
