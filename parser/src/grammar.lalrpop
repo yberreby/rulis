@@ -1,5 +1,5 @@
 use std::str::FromStr;
-use ast::Operator;
+use ast::{Operator, Expr, Operation};
 
 //
 //    number   : /-?[0-9]+/ ;
@@ -10,6 +10,10 @@ use ast::Operator;
 
 grammar;
 
+pub Program: Expr = {
+  <op:Operation> => Expr::Operation(op),
+};
+
 pub Operator: Operator = {
   "+" => Operator::Plus,
   "-" => Operator::Minus,
@@ -17,3 +21,22 @@ pub Operator: Operator = {
   "/" => Operator::Divide,
 };
 
+pub Integer: i64 = {
+  <s:r"-?[0-9]+"> => i64::from_str(s).expect("failed to parse integer"),
+};
+
+pub Operation: Operation = {
+  <operator:Operator> <operands:Expr+> => {
+    Operation {
+      operator: operator,
+      operands: operands,
+    }
+  },
+};
+
+pub Expr: Expr = {
+  <i:Integer> => Expr::Integer(i),
+  "(" <op:Operation> ")" => {
+    Expr::Operation(op)
+  },
+};
