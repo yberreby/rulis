@@ -9,40 +9,32 @@ pub fn eval_expr(expr: &Expr) -> i64 {
 
 // This code could use some .fold()-ing.
 fn eval_op(op: &Operation) -> i64 {
+    let mut iter = op.operands.iter();
+    let initial_accumulator: i64;
+    // Yes this is horribly inefficient.
+    let f: Box<Fn(i64, i64) -> i64>;
+
+
     match op.operator {
-        Operator::Plus => op.operands.iter().fold(0, |acc, operand| acc + eval_expr(operand)),
+        Operator::Plus => {
+            initial_accumulator = 0;
+            f = Box::new(|a, b| a + b)
+        }
         Operator::Minus => {
-            let mut iter = op.operands.iter();
-            let mut acc = eval_expr(&iter.next().unwrap());
-
-            if op.operands.len() == 1 {
-                acc = -acc;
-            } else {
-                for operand in iter {
-                    acc -= eval_expr(operand)
-                }
-            }
-
-            acc
+            let val = eval_expr(iter.next().unwrap());
+            initial_accumulator = if op.operands.len() == 1 { -val } else { val };
+            f = Box::new(|a, b| a - b)
         }
         Operator::Multiply => {
-            let mut acc = 1;
-
-            for operand in &op.operands {
-                acc *= eval_expr(operand)
-            }
-
-            acc
+            initial_accumulator = 1;
+            f = Box::new(|a, b| a * b)
         }
         Operator::Divide => {
-            let mut iter = op.operands.iter();
-            let mut acc = eval_expr(&iter.next().unwrap());
-
-            for operand in iter {
-                acc /= eval_expr(operand)
-            }
-
-            acc
+            initial_accumulator = eval_expr(iter.next().unwrap());
+            f = Box::new(|a, b| a / b)
         }
     }
+
+    iter.fold(initial_accumulator,
+              |acc, operand| (*f)(acc, eval_expr(operand)))
 }
