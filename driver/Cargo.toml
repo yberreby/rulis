@@ -1,7 +1,0 @@
-[package]
-name = "rulis"
-version = "0.1.0"
-authors = ["Yohai Berreby (yberreby) <yohaiberreby@gmail.com>"]
-
-[dependencies]
-rulis-parser = { path = "../parser" }

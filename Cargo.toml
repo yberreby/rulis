@@ -1,6 +1,6 @@
 [package]
 authors = ["Yohai Berreby (yberreby) <yohaiberreby@gmail.com>"]
-name = "rulis-parser"
+name = "rulis"
 version = "0.1.0"
 build = "build.rs"
 
