@@ -1,3 +1,4 @@
+use eval;
 use ast;
 use grammar;
 
@@ -23,4 +24,20 @@ fn it_works() {
 fn invalid_code_is_rejected() {
     let src = "+ 5 ((* 2 428)";
     assert!(grammar::parse_Program(src).is_err());
+}
+
+#[test]
+fn evaluation_works() {
+    let runs = [("(+ 42 268)", 310), ("(- 96)", -96), ("(- 96 20 1 1 1)", 73)];
+
+    for &(ref operation, expected) in &runs {
+        let actual = eval(&operation);
+        assert_eq!(actual,
+                   expected,
+                   "expected {}, got {} when evaluating {:?}",
+                   expected,
+                   actual,
+                   operation);
+        println!("{}: OK", operation);
+    }
 }
