@@ -7,15 +7,10 @@ pub fn eval_expr(expr: &Expr) -> i64 {
     }
 }
 
+// This code could use some .fold()-ing.
 fn eval_op(op: &Operation) -> i64 {
     match op.operator {
-        Operator::Plus => {
-            let mut acc = 0;
-            for operand in &op.operands {
-                acc += eval_expr(operand)
-            }
-            acc
-        }
+        Operator::Plus => op.operands.iter().fold(0, |acc, operand| acc + eval_expr(operand)),
         Operator::Minus => {
             let mut iter = op.operands.iter();
             let mut acc = eval_expr(&iter.next().unwrap());
