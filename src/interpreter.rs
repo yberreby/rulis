@@ -7,7 +7,7 @@ pub fn eval_expr(expr: &Expr) -> i64 {
     }
 }
 
-// This code could use some .fold()-ing.
+// This *might* be over-engineered... ahem.
 fn eval_op(op: &Operation) -> i64 {
     let mut iter = op.operands.iter();
     let initial_accumulator: i64;
