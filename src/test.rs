@@ -27,7 +27,7 @@ fn invalid_code_is_rejected() {
 }
 
 #[test]
-fn evaluation_works() {
+fn simple_arithmetic_evaluation_works() {
     let runs = [("(+ 42 268)", 310),
                 ("(- 96)", -96),
                 ("(- 96 20 1 1 1)", 73),
