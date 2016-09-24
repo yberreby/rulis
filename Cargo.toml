@@ -1,9 +1,10 @@
 [package]
 authors = ["Yohai Berreby (yberreby) <yohaiberreby@gmail.com>"]
+license = "MIT OR Apache-2.0"
 name = "rulis"
 version = "0.1.0"
-license = "MIT OR Apache-2.0"
 
 [build-dependencies]
 
 [dependencies]
+nom = "1.2.4"
