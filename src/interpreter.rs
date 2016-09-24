@@ -1,31 +1,40 @@
 use ast::{Expr, Operation, Operator};
 
-pub fn eval_expr(expr: &Expr) -> i64 {
+pub type Value = i64;
+
+pub fn eval_expr(expr: &Expr) -> Result<Value, String> {
     match *expr {
-        Expr::Integer(i) => i,
+        Expr::Integer(i) => Ok(i),
         Expr::Operation(ref op) => eval_op(&op),
     }
 }
 
 // This *might* be over-engineered... ahem.
-fn eval_op(op: &Operation) -> i64 {
-    let mut iter = op.operands.iter();
-    let initial_accumulator: i64;
-    let f: fn(i64, i64) -> i64;
+fn eval_op(op: &Operation) -> Result<Value, String> {
+    // We're using a function to avoid computing the first operand separately unless it is needed.
+    // The performance impact would probably be small, but computing it upfront could be
+    // semantically incorrect.
+    fn first_operand<'a, I: Iterator<Item = &'a Expr>>(iter: &mut I) -> Result<&'a Expr, String> {
+        iter.next().ok_or_else(|| "missing first operand".into())
+    }
+
+    let mut operands = op.operands.iter();
+    let initial_accumulator: Value;
+    let f: fn(Value, Value) -> Value;
 
     match op.operator {
         Operator::Plus => {
             initial_accumulator = 0;
-            fn g(a: i64, b: i64) -> i64 {
+            fn g(a: Value, b: Value) -> Value {
                 a + b
             }
             f = g;
         }
         Operator::Minus => {
-            let val = eval_expr(iter.next().unwrap());
+            let val: Value = try!(eval_expr(try!(first_operand(&mut operands))));
             initial_accumulator = if op.operands.len() == 1 { -val } else { val };
 
-            fn g(a: i64, b: i64) -> i64 {
+            fn g(a: Value, b: Value) -> Value {
                 a - b
             }
             f = g;
@@ -33,21 +42,21 @@ fn eval_op(op: &Operation) -> i64 {
         Operator::Multiply => {
             initial_accumulator = 1;
 
-            fn g(a: i64, b: i64) -> i64 {
+            fn g(a: Value, b: Value) -> Value {
                 a * b
             }
             f = g;
         }
         Operator::Divide => {
-            initial_accumulator = eval_expr(iter.next().unwrap());
+            initial_accumulator = try!(eval_expr(try!(first_operand(&mut operands))));
 
-            fn g(a: i64, b: i64) -> i64 {
+            fn g(a: Value, b: Value) -> Value {
                 a / b
             }
             f = g;
         }
     }
 
-    iter.fold(initial_accumulator,
-              |acc, operand| f(acc, eval_expr(operand)))
+    Ok(operands.fold(initial_accumulator,
+                     |acc, operand| f(acc, eval_expr(operand).unwrap())))
 }

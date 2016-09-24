@@ -11,8 +11,26 @@ fn main() {
     loop {
         print!("> ");
         flush();
-        io::stdin().read_line(&mut input).unwrap();
-        println!("{}", rulis::eval(&input));
+
+        match io::stdin().read_line(&mut input) {
+            Ok(0) => {
+                println!("\nReceived EOF, exiting");
+                return;
+            }
+            Ok(_) => handle_input(&input),
+            Err(e) => {
+                println!("Failed to read input: {}", e);
+                return;
+            }
+        }
+
         input.clear();
+    }
+}
+
+fn handle_input(input: &str) {
+    match rulis::eval(&input) {
+        Ok(res) => println!("{}", res),
+        Err(err) => println!("Error: {}", err),
     }
 }
