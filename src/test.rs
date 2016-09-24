@@ -4,7 +4,7 @@ use grammar;
 
 #[test]
 fn it_works() {
-    let src = "+ 5 (* 2 428)";
+    let src = "(+ 5 (* 2 428))";
     let expected = ast::Expr::Operation(ast::Operation {
         operator: ast::Operator::Plus,
         operands: vec![ast::Expr::Integer(5),
@@ -17,13 +17,13 @@ fn it_works() {
                        })],
     });
 
-    assert_eq!(grammar::parse_Program(src), Ok(expected));
+    assert_eq!(grammar::parse_Expr(src), Ok(expected));
 }
 
 #[test]
 fn invalid_code_is_rejected() {
-    let src = "+ 5 ((* 2 428)";
-    assert!(grammar::parse_Program(src).is_err());
+    let src = "(+ 5 ((* 2 428))";
+    assert!(grammar::parse_Expr(src).is_err());
 }
 
 #[test]
@@ -40,10 +40,11 @@ fn evaluation_works() {
 
     for &(ref operation, expected) in &runs {
         print!("{}... ", operation);
+        let expected = Ok(expected);
         let actual = eval(&operation);
         assert_eq!(actual,
                    expected,
-                   "expected {}, got {} when evaluating {:?}",
+                   "expected {:?}, got {:?} when evaluating {:?}",
                    expected,
                    actual,
                    operation);
