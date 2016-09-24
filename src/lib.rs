@@ -1,5 +1,3 @@
-#[macro_use]
-extern crate nom;
 mod parser;
 mod ast;
 // mod interpreter;
