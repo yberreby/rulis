@@ -15,7 +15,8 @@ pub fn eval_sexpr(sexpr: &mut [Expr]) -> Result<Expr, String> {
     if let Expr::Symbol(ref s) = operator[0] {
         call(s, arguments)
     } else {
-        Err("first element must be a symbol".into())
+        Err(format!("first element should be a symbol, but was {:?}",
+                    operator[0]))
     }
 }
 
@@ -40,4 +41,3 @@ fn call(operator: &str, arguments: &[Expr]) -> Result<Expr, String> {
         _ => Err(format!("unknown builtin: {}", operator)),
     }
 }
-
