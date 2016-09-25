@@ -9,6 +9,7 @@ use self::error::*;
 use self::lexer::{Token, TKind};
 use num::bigint::BigInt;
 use num::BigRational;
+use num::ToPrimitive;
 
 pub fn parse(s: &str) -> Result<ast::SExpr, String> {
     let tokens = lexer::lex(s);
@@ -110,13 +111,16 @@ impl<R: Iterator<Item = Token>> Parser<R> {
 
     // Atoms = numbers, string literals, symbols...
     fn parse_atom(&mut self) -> PResult<ast::Expr> {
-        match self.token.kind {
-            TKind::DecimalLit => {
-                let i = i64::from_str(&self.token.value.as_ref().unwrap()).unwrap();
-                self.bump();
-                Ok(ast::Expr::Integer(i))
-            }
+        if self.token.kind.is_integer_literal() {
+            let i = try!(self.parse_int_lit()).to_i64().unwrap();
+            return Ok(ast::Expr::Integer(i));
+        }
 
+        match self.token.kind {
+            TKind::FloatLit => {
+                unimplemented!()
+                // interpret float lit
+            }
             TKind::Symbol => {
                 let s = self.token.value.clone().unwrap();
                 self.bump();
@@ -173,6 +177,76 @@ impl<R: Iterator<Item = Token>> Parser<R> {
             } else {
                 let msg = format!("invalid character in {}: {}", token_name, c);
                 return Err(self.err(ErrorKind::other(msg)));
+            }
+        }
+
+        Ok(res)
+    }
+
+    /// Interpret the value of a float/imaginary literal and return the result as a BigRational.
+    /// If this method is being used to parse an imaginary lit, don't include the trailing `i`.
+    fn interpret_float_lit(&mut self, value: &str, token_name: &str) -> PResult<BigRational> {
+        // float_lit = decimals "." [ decimals ] [ exponent ] |
+        //             decimals exponent |
+        //             "." decimals [ exponent ] .
+        // decimals  = decimal_digit { decimal_digit } .
+        // exponent  = ( "e" | "E" ) [ "+" | "-" ] decimals .
+
+        let mut res = BigRational::from_integer(BigInt::from(0u8));
+        let mut chars = value.chars().peekable();
+        let mut parse_exponent = false;
+        let mut digits_after_dot = 0u32; // the number of digits after the dot we are
+
+        while let Some(c) = chars.next() {
+            if c == '.' {
+                digits_after_dot = 1;
+            } else if c == 'e' || c == 'E' {
+                parse_exponent = true;
+                break;
+            } else {
+                let digit = c.to_digit(10).expect("BUG: invalid char in float/imag lit");
+                let digit_value = BigRational::from_integer(BigInt::from(digit));
+
+                if digits_after_dot == 0 {
+                    res = res * BigRational::from_integer(BigInt::from(10u8));
+                    res = res + BigRational::from_integer(BigInt::from(digit));
+                } else {
+                    res = res +
+                          digit_value /
+                          BigRational::from_integer(BigInt::from(10u32.pow(digits_after_dot)));
+
+                    digits_after_dot += 1;
+                }
+            }
+        }
+
+        if parse_exponent {
+            let mut negative = false;
+            if let Some(&c) = chars.peek() {
+                if c == '+' {
+                    chars.next();
+                } else if c == '-' {
+                    negative = true;
+                    chars.next();
+                }
+            } else {
+                // Empty exponent
+                return Err(self.err(ErrorKind::other(format!("malformed {} exponent",
+                                                             token_name))));
+            }
+
+            let mut exponent = 0;
+            while let Some(c) = chars.next() {
+                exponent *= 10;
+                exponent += c.to_digit(10).expect("BUG: invalid char in float/imag lit exponent");
+            }
+
+            for _ in 0..exponent {
+                if negative {
+                    res = res / BigRational::from_integer(BigInt::from(10u8));
+                } else {
+                    res = res * BigRational::from_integer(BigInt::from(10u8));
+                }
             }
         }
 

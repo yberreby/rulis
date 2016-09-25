@@ -42,4 +42,13 @@ impl TKind {
             _ => false,
         }
     }
+
+    pub fn is_integer_literal(&self) -> bool {
+        use self::TKind::*;
+
+        match *self {
+            DecimalLit | HexLit | OctalLit => true,
+            _ => false,
+        }
+    }
 }
