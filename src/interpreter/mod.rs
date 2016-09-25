@@ -2,6 +2,7 @@ mod builtins;
 use ast::{Expr, SExpr};
 
 pub fn eval_sexpr(sexpr: &mut [Expr]) -> Result<Expr, String> {
+    println!("eval sexpr: {:?}", sexpr);
     if sexpr.len() == 0 {
         return Ok(Expr::SExpr(SExpr::empty()));
     }

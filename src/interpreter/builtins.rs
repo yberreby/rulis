@@ -68,6 +68,7 @@ pub fn eval(arguments: &[Expr]) -> Result<Expr, String> {
     }
 
     if let Expr::QExpr(mut qexpr) = arguments[0].clone() {
+        println!("eval qexpr: {}", qexpr);
         super::eval_sexpr(&mut qexpr)
     } else {
         return Err("type error, expected Q-Expression".into());
