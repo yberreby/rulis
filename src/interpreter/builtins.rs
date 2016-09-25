@@ -27,11 +27,11 @@ pub fn arithmetic_operation(operator: &str, arguments: &[Expr]) -> Result<Expr, 
     Ok(Expr::Integer(result))
 }
 
-pub fn list(operator: &str, arguments: &[Expr]) -> Result<Expr, String> {
+pub fn list(arguments: &[Expr]) -> Result<Expr, String> {
     Ok(Expr::QExpr(QExpr::new(arguments.into())))
 }
 
-pub fn head(operator: &str, arguments: &[Expr]) -> Result<Expr, String> {
+pub fn head(arguments: &[Expr]) -> Result<Expr, String> {
     if arguments.len() > 1 {
         return Err("too many arguments".into());
     }
@@ -44,14 +44,22 @@ pub fn head(operator: &str, arguments: &[Expr]) -> Result<Expr, String> {
     }
 }
 
-pub fn tail(operator: &str, arguments: &[Expr]) -> Result<Expr, String> {
+pub fn tail(arguments: &[Expr]) -> Result<Expr, String> {
     unimplemented!()
 }
 
-pub fn join(operator: &str, arguments: &[Expr]) -> Result<Expr, String> {
+pub fn join(arguments: &[Expr]) -> Result<Expr, String> {
     unimplemented!()
 }
 
-pub fn eval(operator: &str, arguments: &[Expr]) -> Result<Expr, String> {
-    unimplemented!()
+pub fn eval(arguments: &[Expr]) -> Result<Expr, String> {
+    if arguments.len() > 1 {
+        return Err("too many arguments".into());
+    }
+
+    if let Expr::QExpr(mut qexpr) = arguments[0].clone() {
+        super::eval_sexpr(&mut qexpr)
+    } else {
+        return Err("type error, expected Q-Expression".into());
+    }
 }

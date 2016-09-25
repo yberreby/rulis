@@ -32,38 +32,12 @@ pub fn eval_expr(expr: &mut Expr) -> Result<Expr, String> {
 fn call(operator: &str, arguments: &[Expr]) -> Result<Expr, String> {
     match operator {
         "+" | "-" | "*" | "/" => builtins::arithmetic_operation(operator, arguments),
-        "list" => builtins::list(operator, arguments),
-        "head" => builtins::head(operator, arguments),
-        "tail" => builtins::tail(operator, arguments),
-        "join" => builtins::join(operator, arguments),
-        "eval" => builtins::eval(operator, arguments),
+        "list" => builtins::list(arguments),
+        "head" => builtins::head(arguments),
+        "tail" => builtins::tail(arguments),
+        "join" => builtins::join(arguments),
+        "eval" => builtins::eval(arguments),
         _ => Err(format!("unknown builtin: {}", operator)),
     }
 }
 
-fn arithmetic_operation(operator: &str, arguments: &[Expr]) -> Result<Expr, String> {
-    let mut numeric_arguments = arguments.iter().map(|e| e.as_i64().unwrap());
-    let first_argument = numeric_arguments.next().unwrap();
-    let mut result = first_argument;
-
-    if operator == "-" && arguments.len() == 1 {
-        result = -result;
-    }
-
-    for arg in numeric_arguments {
-        match operator {
-            "+" => result += arg,
-            "-" => result -= arg,
-            "*" => result *= arg,
-            "/" => {
-                if arg == 0 {
-                    return Err("tried to divide by zero".into());
-                }
-                result /= arg
-            }
-            _ => return Err("cannot call non-existent operator".into()),
-        }
-    }
-
-    Ok(Expr::Integer(result))
-}
