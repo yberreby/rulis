@@ -90,7 +90,9 @@ impl<R: Iterator<Item = Token>> Parser<R> {
         let res = match self.token.kind {
             k if k.can_start_atom() => try!(self.parse_atom()),
             TKind::LParen => ast::Expr::SExpr(try!(self.parse_sexpr())),
-            _ => unimplemented!(),
+            _ => {
+                return Err(self.err(ErrorKind::unexpected_token(vec![], self.token.clone())));
+            }
         };
 
         Ok(res)

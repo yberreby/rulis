@@ -34,6 +34,10 @@ impl fmt::Display for ErrorKind {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match *self {
             ErrorKind::UnexpectedToken { ref found, ref expected } => {
+                if expected.is_empty() {
+                    return write!(f, "unexpected token \"{:?}\"", found);
+                }
+
                 try!(write!(f, "expected "));
 
                 if expected.len() > 2 {
@@ -44,7 +48,7 @@ impl fmt::Display for ErrorKind {
                         try!(write!(f, "\"{:?}\"{}", tk, sep));
                         sep = ", ";
                     }
-                } else {
+                } else if expected.len() == 1 {
                     try!(write!(f, "\"{:?}\" ", expected[0]));
                 }
 
