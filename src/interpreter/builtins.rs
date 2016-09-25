@@ -21,11 +21,6 @@ fn add_builtin(env: &mut Env, name: String, value: Expr) {
     env.insert(name, value);
 }
 
-// Built-in functions
-
-
-
-// Arithmetic operations
 
 pub fn arithmetic_operation(operator: &str, arguments: &[Expr]) -> Result<Expr, String> {
     let mut numeric_arguments = arguments.iter().map(|e| e.as_i64().unwrap());
