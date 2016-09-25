@@ -9,10 +9,10 @@ use self::lexer::{Token, TKind};
 use num::bigint::BigInt;
 use num::ToPrimitive;
 
-pub fn parse(s: &str) -> Result<ast::SExpr, String> {
+pub fn parse(s: &str) -> Result<ast::Expr, String> {
     let tokens = lexer::lex(s);
     let mut parser = Parser::new(tokens.into_iter().map(|tas| tas.token));
-    parser.parse_sexpr().map_err(|e| e.kind.to_string())
+    parser.parse_expr().map_err(|e| e.kind.to_string())
 }
 
 pub struct Parser<R: Iterator<Item = Token>> {
