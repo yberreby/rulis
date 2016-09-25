@@ -29,6 +29,13 @@ pub fn eval_expr(expr: &mut Expr) -> Result<Expr, String> {
 }
 
 fn call(operator: &str, arguments: &[Expr]) -> Result<Expr, String> {
+    match operator {
+        "+" | "-" | "*" | "/" => arithmetic_operation(operator, arguments),
+        _ => panic!(),
+    }
+}
+
+fn arithmetic_operation(operator: &str, arguments: &[Expr]) -> Result<Expr, String> {
     let mut numeric_arguments = arguments.iter().map(|e| e.as_i64().unwrap());
     let first_argument = numeric_arguments.next().unwrap();
     let mut result = first_argument;
