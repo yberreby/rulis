@@ -113,11 +113,18 @@ impl<R: Iterator<Item = Token>> Parser<R> {
 
     // Atoms = numbers, string literals, symbols...
     fn parse_atom(&mut self) -> PResult<ast::Expr> {
-        if self.token.kind == TKind::DecimalLit {
-            let i = i64::from_str(&self.token.value.as_ref().unwrap()).unwrap();
-            Ok(ast::Expr::Integer(i))
-        } else {
-            unimplemented!()
+        match self.token.kind {
+            TKind::DecimalLit => {
+                let i = i64::from_str(&self.token.value.as_ref().unwrap()).unwrap();
+                self.bump();
+                Ok(ast::Expr::Integer(i))
+            }
+            TKind::Symbol => {
+                let s = self.token.value.clone().unwrap();
+                self.bump();
+                Ok(ast::Expr::Symbol(s))
+            }
+            _ => unimplemented!(),
         }
     }
 }
