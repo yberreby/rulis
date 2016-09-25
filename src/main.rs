@@ -20,7 +20,7 @@ fn main() {
             Ok(line) => {
                 rl.add_history_entry(&line);
 
-                match interpreter.evaluate(input) {
+                match interpreter.evaluate(&line) {
                     Ok(res) => println!("{}", res),
                     Err(err) => println!("Error: {}", err),
                 }

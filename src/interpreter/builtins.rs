@@ -1,4 +1,4 @@
-use value::{Expr, QExpr, Env, Function};
+use value::{Expr, QExpr, Env, Function, InnerFunc};
 
 pub fn add_builtins(env: &mut Env) {
     add_builtin_fn(env, "list", builtin_list);
@@ -8,8 +8,8 @@ pub fn add_builtins(env: &mut Env) {
     add_builtin_fn(env, "join", builtin_join);
 }
 
-fn add_builtin_fn<S: Into<String>>(env: &mut Env, name: S, f: Function) {
-    add_builtin(env, name.into(), Expr::Function(f));
+fn add_builtin_fn<S: Into<String>>(env: &mut Env, name: S, f: InnerFunc) {
+    add_builtin(env, name.into(), Expr::Function(Function::new(f)));
 }
 
 fn add_builtin(env: &mut Env, name: String, value: Expr) {
@@ -50,19 +50,19 @@ pub fn arithmetic_operation(operator: &str, arguments: &[Expr]) -> Result<Expr, 
 }
 
 fn builtin_add(_env: &mut Env, arguments: &[Expr]) -> Result<Expr, String> {
-    arithmetic_operation("+", arguments);
+    arithmetic_operation("+", arguments)
 }
 
 fn builtin_sub(_env: &mut Env, arguments: &[Expr]) -> Result<Expr, String> {
-    arithmetic_operation("-", arguments);
+    arithmetic_operation("-", arguments)
 }
 
 fn builtin_mul(_env: &mut Env, arguments: &[Expr]) -> Result<Expr, String> {
-    arithmetic_operation("*", arguments);
+    arithmetic_operation("*", arguments)
 }
 
 fn builtin_div(_env: &mut Env, arguments: &[Expr]) -> Result<Expr, String> {
-    arithmetic_operation("/", arguments);
+    arithmetic_operation("/", arguments)
 }
 
 

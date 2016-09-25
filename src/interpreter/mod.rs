@@ -37,7 +37,7 @@ fn eval_sexpr(env: &mut Env, sexpr: &mut [Expr]) -> Result<Expr, String> {
     let (operator, arguments) = sexpr.split_at_mut(1);
 
     if let Expr::Function(ref f) = operator[0] {
-        (*f)(env, arguments)
+        f.call(env, arguments)
     } else {
         Err(format!("first element should be function, but was {:?}",
                     operator[0]))
@@ -47,7 +47,9 @@ fn eval_sexpr(env: &mut Env, sexpr: &mut [Expr]) -> Result<Expr, String> {
 
 fn eval_expr(env: &mut Env, expr: &mut Expr) -> Result<Expr, String> {
     match *expr {
-        Expr::Integer(_) | Expr::QExpr(_) => Ok(expr.clone()),
+        Expr::Integer(_) |
+        Expr::QExpr(_) |
+        Expr::Function(_) => Ok(expr.clone()),
 
         // TODO: implement name resolution (identifiers).
         Expr::Symbol(ref symbol) => {
