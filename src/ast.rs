@@ -1,5 +1,5 @@
 use std::fmt;
-use std::ops::Deref;
+use std::ops::{Deref, DerefMut};
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct SExpr {
@@ -24,6 +24,12 @@ impl Deref for SExpr {
     }
 }
 
+impl DerefMut for SExpr {
+    fn deref_mut(&mut self) -> &mut [Expr] {
+        &mut self.exprs
+    }
+}
+
 impl fmt::Display for SExpr {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         try!(write!(f, "("));
@@ -42,7 +48,7 @@ impl fmt::Display for SExpr {
 #[derive(Debug, Clone, PartialEq)]
 pub enum Expr {
     Integer(i64),
-    Symbol(Symbol),
+    Symbol(String),
     SExpr(SExpr),
 }
 
@@ -55,8 +61,6 @@ impl Expr {
         }
     }
 }
-
-pub type Symbol = String;
 
 impl fmt::Display for Expr {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
