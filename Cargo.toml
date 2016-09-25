@@ -7,3 +7,4 @@ version = "0.1.0"
 [build-dependencies]
 
 [dependencies]
+num = "0.1.35"

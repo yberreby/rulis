@@ -1,3 +1,5 @@
+extern crate num;
+
 mod parser;
 mod ast;
 mod interpreter;
