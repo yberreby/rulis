@@ -29,11 +29,11 @@ fn eval_expr(expr: &mut Expr) -> Result<Expr, String> {
 
 fn call(operator: &str, arguments: &[Expr]) -> Result<Expr, String> {
     let mut numeric_arguments = arguments.iter().map(|e| e.as_i64().unwrap());
-    let mut result = 0;
-
     let first_argument = numeric_arguments.next().unwrap();
-    if operator == "-" {
-        result = -first_argument;
+    let mut result = first_argument;
+
+    if operator == "-" && arguments.len() == 1 {
+        result = -result;
     }
 
     for arg in numeric_arguments {
