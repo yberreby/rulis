@@ -41,7 +41,8 @@ fn qexpressions_builtins_work() {
                 ("(eval {head (list 1 2 3 4)})", "{1}"),
                 ("(tail {tail tail tail})", "{tail tail}"),
                 ("(eval (tail {tail tail {5 6 7}}))", "{6 7}"),
-                ("(eval {+ 1 2})", "3")];
+                ("(eval {+ 1 2})", "3"),
+                ("(join {+ 1 2} {6548} {/ / /})", "{+ 1 2 6548 / / /}")];
 
     for &(ref operation, expected) in &runs {
         print!("{}... ", operation);

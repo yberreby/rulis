@@ -1,4 +1,4 @@
-use ast::{Expr, QExpr, SExpr};
+use ast::{Expr, QExpr};
 
 pub fn arithmetic_operation(operator: &str, arguments: &[Expr]) -> Result<Expr, String> {
     let mut numeric_arguments = arguments.iter().map(|e| e.as_i64().unwrap());
@@ -59,7 +59,19 @@ pub fn tail(arguments: &[Expr]) -> Result<Expr, String> {
 }
 
 pub fn join(arguments: &[Expr]) -> Result<Expr, String> {
-    unimplemented!()
+    let mut v = Vec::new();
+
+    for arg in arguments.to_vec() {
+        if let Expr::QExpr(qexpr) = arg {
+            for expr in qexpr.exprs {
+                v.push(expr);
+            }
+        } else {
+            return Err(format!("expected Q-Expression, found {:?}", arg));
+        }
+    }
+
+    Ok(Expr::QExpr(QExpr::new(v)))
 }
 
 pub fn eval(arguments: &[Expr]) -> Result<Expr, String> {
