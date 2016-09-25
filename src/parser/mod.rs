@@ -3,13 +3,13 @@ mod error;
 
 use std::iter::Peekable;
 
-use ast;
+use value::*;
 use self::error::*;
 use self::lexer::{Token, TKind};
 use num::bigint::BigInt;
 use num::ToPrimitive;
 
-pub fn parse(s: &str) -> Result<ast::Expr, String> {
+pub fn parse(s: &str) -> Result<Expr, String> {
     let tokens = lexer::lex(s);
     let mut parser = Parser::new(tokens.into_iter().map(|tas| tas.token));
     parser.parse_expr().map_err(|e| e.kind.to_string())
@@ -72,7 +72,7 @@ impl<R: Iterator<Item = Token>> Parser<R> {
         Error { kind: kind }
     }
 
-    fn parse_sexpr(&mut self) -> PResult<ast::SExpr> {
+    fn parse_sexpr(&mut self) -> PResult<SExpr> {
         try!(self.eat(TKind::LParen));
 
         let mut exprs = Vec::new();
@@ -83,10 +83,10 @@ impl<R: Iterator<Item = Token>> Parser<R> {
 
         try!(self.eat(TKind::RParen));
 
-        Ok(ast::SExpr::new(exprs))
+        Ok(SExpr::new(exprs))
     }
 
-    fn parse_qexpr(&mut self) -> PResult<ast::QExpr> {
+    fn parse_qexpr(&mut self) -> PResult<QExpr> {
         try!(self.eat(TKind::LBrace));
 
         let mut exprs = Vec::new();
@@ -97,14 +97,14 @@ impl<R: Iterator<Item = Token>> Parser<R> {
 
         try!(self.eat(TKind::RBrace));
 
-        Ok(ast::QExpr::new(exprs))
+        Ok(QExpr::new(exprs))
     }
 
-    fn parse_expr(&mut self) -> PResult<ast::Expr> {
+    fn parse_expr(&mut self) -> PResult<Expr> {
         let res = match self.token.kind {
             k if k.can_start_atom() => try!(self.parse_atom()),
-            TKind::LParen => ast::Expr::SExpr(try!(self.parse_sexpr())),
-            TKind::LBrace => ast::Expr::QExpr(try!(self.parse_qexpr())),
+            TKind::LParen => Expr::SExpr(try!(self.parse_sexpr())),
+            TKind::LBrace => Expr::QExpr(try!(self.parse_qexpr())),
             _ => {
                 return Err(self.err(ErrorKind::unexpected_token(vec![], self.token.clone())));
             }
@@ -114,10 +114,10 @@ impl<R: Iterator<Item = Token>> Parser<R> {
     }
 
     // Atoms = numbers, string literals, symbols...
-    fn parse_atom(&mut self) -> PResult<ast::Expr> {
+    fn parse_atom(&mut self) -> PResult<Expr> {
         if self.token.kind.is_integer_literal() {
             let i = try!(self.parse_int_lit()).to_i64().unwrap();
-            return Ok(ast::Expr::Integer(i));
+            return Ok(Expr::Integer(i));
         }
 
         match self.token.kind {
@@ -128,7 +128,7 @@ impl<R: Iterator<Item = Token>> Parser<R> {
             TKind::Symbol => {
                 let s = self.token.value.clone().unwrap();
                 self.bump();
-                Ok(ast::Expr::Symbol(s))
+                Ok(Expr::Symbol(s))
             }
             _ => panic!("unknown token: {:?}", self.token.kind),
         }

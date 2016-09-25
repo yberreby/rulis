@@ -5,19 +5,25 @@ extern crate rustyline;
 use std::env;
 use rustyline::error::ReadlineError;
 use rustyline::Editor;
+use rulis::Interpreter;
 
 fn main() {
     env::set_var("RUST_LOG", env::var("LOG").unwrap_or("info".into()));
     env_logger::init().unwrap();
 
     let mut rl = Editor::<()>::new();
+    let mut interpreter = Interpreter::new();
     loop {
         let readline = rl.readline("> ");
 
         match readline {
             Ok(line) => {
                 rl.add_history_entry(&line);
-                handle_input(&line);
+
+                match interpreter.evaluate(&line) {
+                    Ok(res) => println!("{}", res),
+                    Err(err) => println!("Error: {}", err),
+                }
             }
             Err(ReadlineError::Interrupted) => {
                 println!("CTRL-C");
@@ -32,12 +38,5 @@ fn main() {
                 return;
             }
         }
-    }
-}
-
-fn handle_input(input: &str) {
-    match rulis::eval(input) {
-        Ok(res) => println!("{}", res),
-        Err(err) => println!("Error: {}", err),
     }
 }
