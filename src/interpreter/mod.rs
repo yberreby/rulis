@@ -15,12 +15,13 @@ impl Interpreter {
     }
 
     pub fn evaluate(&mut self, s: &str) -> Result<Expr, String> {
-        unimplemented!()
+        let mut expr = try!(::parser::parse(s));
+        self.evaluate_expression(&mut expr)
     }
 
 
-    pub fn evaluate_expression(&mut self, e: &mut Expr) -> Result<Expr, String> {
-        unimplemented!()
+    pub fn evaluate_expression(&mut self, expr: &mut Expr) -> Result<Expr, String> {
+        eval_expr(&mut self.env, expr)
     }
 }
 
