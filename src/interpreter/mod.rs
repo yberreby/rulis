@@ -1,3 +1,4 @@
+mod builtins;
 use ast::{Expr, SExpr};
 
 pub fn eval_sexpr(sexpr: &mut [Expr]) -> Result<Expr, String> {
@@ -30,8 +31,13 @@ pub fn eval_expr(expr: &mut Expr) -> Result<Expr, String> {
 
 fn call(operator: &str, arguments: &[Expr]) -> Result<Expr, String> {
     match operator {
-        "+" | "-" | "*" | "/" => arithmetic_operation(operator, arguments),
-        _ => panic!(),
+        "+" | "-" | "*" | "/" => builtins::arithmetic_operation(operator, arguments),
+        "list" => builtins::list(operator, arguments),
+        "head" => builtins::head(operator, arguments),
+        "tail" => builtins::tail(operator, arguments),
+        "join" => builtins::join(operator, arguments),
+        "eval" => builtins::eval(operator, arguments),
+        _ => Err(format!("unknown builtin: {}", operator)),
     }
 }
 
