@@ -8,7 +8,9 @@ use std::str::FromStr;
 use ast;
 
 pub fn parse(s: &str) -> Result<ast::SExpr, String> {
-    unimplemented!()
+    let tokens = lexer::lex(s);
+    let mut parser = Parser::new(tokens.into_iter().map(|tas| tas.token));
+    parser.parse_sexpr().map_err(|e| e.kind.to_string())
 }
 
 // struct Parser<I: Iterator<Item = Token>> {

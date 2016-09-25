@@ -3,6 +3,12 @@ pub use self::token::*;
 
 use std::iter::Iterator;
 
+/// Convenience function to collect all the tokens from a string.
+pub fn lex(s: &str) -> Vec<TokenAndSpan> {
+    let lexer = Lexer::new(s);
+    lexer.collect()
+}
+
 /// A `Lexer` parses a source string into a list of tokens, which may later be used to construct an
 /// Abstract Syntax Tree.
 pub struct Lexer<'src> {
@@ -268,16 +274,6 @@ impl<'src> Iterator for Lexer<'src> {
     }
 }
 
-/// Convenience function to collect all the tokens from a string.
-pub fn tokenize(s: &str) -> Vec<TokenAndSpan> {
-    let lexer = Lexer::new(s);
-    lexer.collect()
-}
-
-
-// =====
-// Utility functions.
-// =====
 
 fn can_start_identifier(c: char) -> bool {
     c.is_alphabetic() || c == '_'
