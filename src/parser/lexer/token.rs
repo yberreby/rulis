@@ -32,3 +32,14 @@ pub enum TKind {
     /// End Of File.
     Eof,
 }
+
+impl TKind {
+    pub fn can_start_atom(&self) -> bool {
+        use self::TKind::*;
+
+        match *self {
+            Symbol | HexLit | OctalLit | FloatLit | DecimalLit | StringLit => true,
+            _ => false,
+        }
+    }
+}

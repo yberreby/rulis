@@ -4,6 +4,7 @@ mod error;
 use self::error::*;
 use self::lexer::{Token, TKind};
 use std::iter::Peekable;
+use std::str::FromStr;
 use ast;
 
 pub fn parse(s: &str) -> Result<ast::SExpr, String> {
@@ -76,11 +77,45 @@ impl<R: Iterator<Item = Token>> Parser<R> {
         Ok(())
     }
 
-    fn eat_and_get(&mut self, expected: TKind) -> PResult<(Token)> {
+    fn eat_and_get(&mut self, expected: TKind) -> PResult<Token> {
         if self.token.kind != expected {
             // return Err(self.err(ErrorKind::unexpected_token(vec![expected], self.token.clone())));
             panic!("unexpected token")
         }
         Ok(self.bump_and_get())
+    }
+
+    fn parse_sexpr(&mut self) -> PResult<ast::SExpr> {
+        try!(self.eat(TKind::LParen));
+
+        let mut sexpr = ast::SExpr::new();
+        while self.token.kind != TKind::RParen {
+            let expr = try!(self.parse_expr());
+            sexpr.push(expr);
+        }
+
+        try!(self.eat(TKind::RParen));
+
+        Ok(sexpr)
+    }
+
+    fn parse_expr(&mut self) -> PResult<ast::Expr> {
+        let res = match self.token.kind {
+            k if k.can_start_atom() => try!(self.parse_atom()),
+            TKind::LParen => ast::Expr::SExpr(try!(self.parse_sexpr())),
+            _ => unimplemented!(),
+        };
+
+        Ok(res)
+    }
+
+    // Atoms = numbers, string literals, symbols...
+    fn parse_atom(&mut self) -> PResult<ast::Expr> {
+        if self.token.kind == TKind::DecimalLit {
+            let i = i64::from_str(&self.token.value.as_ref().unwrap()).unwrap();
+            Ok(ast::Expr::Integer(i))
+        } else {
+            unimplemented!()
+        }
     }
 }
