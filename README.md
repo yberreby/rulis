@@ -4,13 +4,6 @@
 Lisp](http://www.buildyourownlisp.com/)'s grammar. It comes with a very simple
 REPL that you can run with `cargo run`.
 
-The interesting parts:
-
-- `rulis` uses [LALRPOP](https://github.com/nikomatsakis/lalrpop) for parsing.
-- It only took about 1 1/2 hour and 128 lines of code (including the LALRPOP
-  grammar) to go from nothing to a working albeit stripped down REPL, a success
-  which I mostly attribute to LALRPOP and Rust's pattern matching.
-
 ## License
 
 Licensed under either of

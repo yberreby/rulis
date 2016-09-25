@@ -1,12 +1,12 @@
 [package]
 authors = ["Yohai Berreby (yberreby) <yohaiberreby@gmail.com>"]
+license = "MIT OR Apache-2.0"
 name = "rulis"
 version = "0.1.0"
-build = "build.rs"
-license = "MIT OR Apache-2.0"
 
 [build-dependencies]
-lalrpop = "0.12.0"
 
 [dependencies]
-lalrpop-util = "0.12.0"
+env_logger = "0.3.5"
+log = "0.3.6"
+num = "0.1.35"

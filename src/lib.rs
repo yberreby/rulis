@@ -1,10 +1,16 @@
-mod grammar;
+#[macro_use]
+extern crate log;
+extern crate num;
+
+mod parser;
 mod ast;
 mod interpreter;
 
-pub fn eval(s: &str) -> Result<i64, String> {
-    let expr = try!(grammar::parse_Expr(s).map_err(|e| format!("{:?}", e)));
-    let res = try!(interpreter::eval_expr(&expr));
+pub fn eval(s: &str) -> Result<ast::Expr, String> {
+    let mut sexpr = try!(parser::parse(s).map_err(|e| format!("{:?}", e)));
+    debug!("S-Expression (debug): {:?}", sexpr);
+    debug!("S-Expression (display): {}", sexpr);
+    let res = try!(interpreter::eval_sexpr(&mut sexpr));
     Ok(res)
 }
 
