@@ -31,6 +31,7 @@ pub fn list(arguments: &[Expr]) -> Result<Expr, String> {
     Ok(Expr::QExpr(QExpr::new(arguments.into())))
 }
 
+/// head returns a QExpr containing one element, the first element of the qexpr it was passed.
 pub fn head(arguments: &[Expr]) -> Result<Expr, String> {
     if arguments.len() > 1 {
         return Err("too many arguments".into());
@@ -38,7 +39,7 @@ pub fn head(arguments: &[Expr]) -> Result<Expr, String> {
 
     if let Expr::QExpr(qexpr) = arguments[0].clone() {
         let head = qexpr[0].clone();
-        Ok(head)
+        Ok(Expr::QExpr(QExpr::new(vec![head])))
     } else {
         return Err("type error, expected Q-Expression".into());
     }
