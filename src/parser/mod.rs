@@ -9,10 +9,10 @@ use self::lexer::{Token, TKind};
 use num::bigint::BigInt;
 use num::ToPrimitive;
 
-pub fn parse(s: &str) -> Result<ast::SExpr, String> {
+pub fn parse(s: &str) -> Result<ast::Expr, String> {
     let tokens = lexer::lex(s);
     let mut parser = Parser::new(tokens.into_iter().map(|tas| tas.token));
-    parser.parse_sexpr().map_err(|e| e.kind.to_string())
+    parser.parse_expr().map_err(|e| e.kind.to_string())
 }
 
 pub struct Parser<R: Iterator<Item = Token>> {
@@ -86,10 +86,25 @@ impl<R: Iterator<Item = Token>> Parser<R> {
         Ok(ast::SExpr::new(exprs))
     }
 
+    fn parse_qexpr(&mut self) -> PResult<ast::QExpr> {
+        try!(self.eat(TKind::LBrace));
+
+        let mut exprs = Vec::new();
+        while self.token.kind != TKind::RBrace {
+            let expr = try!(self.parse_expr());
+            exprs.push(expr);
+        }
+
+        try!(self.eat(TKind::RBrace));
+
+        Ok(ast::QExpr::new(exprs))
+    }
+
     fn parse_expr(&mut self) -> PResult<ast::Expr> {
         let res = match self.token.kind {
             k if k.can_start_atom() => try!(self.parse_atom()),
             TKind::LParen => ast::Expr::SExpr(try!(self.parse_sexpr())),
+            TKind::LBrace => ast::Expr::QExpr(try!(self.parse_qexpr())),
             _ => {
                 return Err(self.err(ErrorKind::unexpected_token(vec![], self.token.clone())));
             }
