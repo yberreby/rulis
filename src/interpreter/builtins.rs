@@ -1,6 +1,8 @@
-use value::{Expr, QExpr, Env, Function, InnerFunc};
+use value::{Expr, SExpr, QExpr, Env, Function, InnerFunc};
 
 pub fn add_builtins(env: &mut Env) {
+    add_builtin_fn(env, "def", builtin_def);
+
     add_builtin_fn(env, "list", builtin_list);
     add_builtin_fn(env, "head", builtin_head);
     add_builtin_fn(env, "tail", builtin_tail);
@@ -123,5 +125,24 @@ fn builtin_eval(env: &mut Env, arguments: &[Expr]) -> Result<Expr, String> {
         super::eval_sexpr(env, &mut qexpr)
     } else {
         return Err("type error, expected Q-Expression".into());
+    }
+}
+
+fn builtin_def(env: &mut Env, arguments: &[Expr]) -> Result<Expr, String> {
+    if let Expr::QExpr(symbols) = arguments[0].clone() {
+        for (i, maybe_symbol) in symbols.to_vec().into_iter().enumerate() {
+            if let Expr::Symbol(s) = maybe_symbol {
+                // We need +1 to skip past the first argument, which is the QExpr of symbols.
+                env.insert(s, arguments[i + 1].clone());
+            } else {
+                return Err(format!("expected symbol, found {:?}", maybe_symbol));
+            }
+        }
+
+
+        Ok(Expr::SExpr(SExpr::empty()))
+    } else {
+        return Err(format!("expected Q-expression as first argument, found {:?}",
+                           arguments[0]));
     }
 }
