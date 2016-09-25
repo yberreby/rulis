@@ -1,12 +1,17 @@
 extern crate rulis;
+extern crate env_logger;
 
 use std::io::{self, Write};
+use std::env;
 
 fn flush() {
     io::stdout().flush().expect("failed to flush");
 }
 
 fn main() {
+    env::set_var("RUST_LOG", env::var("LOG").unwrap_or("info".into()));
+    env_logger::init().unwrap();
+
     let mut input = String::new();
     loop {
         print!("> ");
