@@ -90,15 +90,15 @@ impl<R: Iterator<Item = Token>> Parser<R> {
     fn parse_sexpr(&mut self) -> PResult<ast::SExpr> {
         try!(self.eat(TKind::LParen));
 
-        let mut sexpr = ast::SExpr::new();
+        let mut exprs = Vec::new();
         while self.token.kind != TKind::RParen {
             let expr = try!(self.parse_expr());
-            sexpr.push(expr);
+            exprs.push(expr);
         }
 
         try!(self.eat(TKind::RParen));
 
-        Ok(sexpr)
+        Ok(ast::SExpr::new(exprs))
     }
 
     fn parse_expr(&mut self) -> PResult<ast::Expr> {

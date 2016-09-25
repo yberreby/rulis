@@ -1,9 +1,11 @@
 use ast::{Expr, SExpr};
 
-pub type Value = i64;
+pub fn eval_sexpr(sexpr: &[Expr]) -> Result<Value, String> {
+    let (operator, operands) = sexpr.split_at_mut(1);
+    for operand in operands.iter_mut() {
+        operand = try!(eval_expr(&operand));
+    }
 
-pub fn eval_sexpr(sexpr: &SExpr) -> Result<Value, String> {
-    let (operator, operands) = sexpr.split_at(1);
     unimplemented!()
 }
 
