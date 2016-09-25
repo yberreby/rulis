@@ -6,6 +6,11 @@ pub fn add_builtins(env: &mut Env) {
     add_builtin_fn(env, "tail", builtin_tail);
     add_builtin_fn(env, "eval", builtin_eval);
     add_builtin_fn(env, "join", builtin_join);
+
+    add_builtin_fn(env, "+", builtin_add);
+    add_builtin_fn(env, "-", builtin_sub);
+    add_builtin_fn(env, "*", builtin_mul);
+    add_builtin_fn(env, "/", builtin_div);
 }
 
 fn add_builtin_fn<S: Into<String>>(env: &mut Env, name: S, f: InnerFunc) {
