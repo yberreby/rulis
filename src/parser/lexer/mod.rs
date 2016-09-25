@@ -275,12 +275,19 @@ impl<'src> Iterator for Lexer<'src> {
 }
 
 
+fn is_allowed_symbol(c: char) -> bool {
+    match c {
+        '_' | '+' | '-' | '*' | '/' | '\\' | '=' | '<' | '>' | '!' | '&' => true,
+        _ => false,
+    }
+}
+
 fn can_start_identifier(c: char) -> bool {
-    c.is_alphabetic() || c == '_'
+    is_allowed_symbol(c) || c.is_alphabetic()
 }
 
 fn can_continue_identifier(c: char) -> bool {
-    c.is_alphabetic() || c.is_numeric() || c == '_'
+    is_allowed_symbol(c) || c.is_alphabetic() || c.is_numeric()
 }
 
 fn char_at(s: &str, byte: usize) -> char {
