@@ -1,4 +1,4 @@
-use ast::Expr;
+use ast::{Expr, QExpr, SExpr};
 
 pub fn arithmetic_operation(operator: &str, arguments: &[Expr]) -> Result<Expr, String> {
     let mut numeric_arguments = arguments.iter().map(|e| e.as_i64().unwrap());
@@ -28,7 +28,7 @@ pub fn arithmetic_operation(operator: &str, arguments: &[Expr]) -> Result<Expr, 
 }
 
 pub fn list(operator: &str, arguments: &[Expr]) -> Result<Expr, String> {
-    unimplemented!()
+    Ok(Expr::QExpr(QExpr::new(arguments.into())))
 }
 pub fn head(operator: &str, arguments: &[Expr]) -> Result<Expr, String> {
     unimplemented!()
