@@ -42,7 +42,7 @@ impl<'src> Lexer<'src> {
         self.byte_offset += self.current_char.unwrap().len_utf8();
 
         if self.byte_offset < self.src.len() {
-            let ch = char_at(&self.src, self.byte_offset);
+            let ch = char_at(self.src, self.byte_offset);
             self.current_char = Some(ch);
         } else {
             self.current_char = None;
@@ -54,7 +54,7 @@ impl<'src> Lexer<'src> {
     fn next_char(&self) -> Option<char> {
         let next_offset = self.byte_offset + 1;
         if next_offset < self.src.len() {
-            let ch = char_at(&self.src, next_offset);
+            let ch = char_at(self.src, next_offset);
             Some(ch)
         } else {
             None
@@ -99,7 +99,7 @@ impl<'src> Lexer<'src> {
         let mut had_e = false;
         let mut had_dot = false;
 
-        'outer: while let Some(c) = self.current_char {
+        while let Some(c) = self.current_char {
             if c.is_digit(10) {
                 self.bump();
             } else if !had_e && (c == 'e' || c == 'E') {

@@ -140,10 +140,10 @@ impl<R: Iterator<Item = Token>> Parser<R> {
                 Ok(try!(self.interpret_int(&value[2..], 16, "hex literal")))
             }
             _ => {
-                return Err(self.err(ErrorKind::unexpected_token(vec![TKind::DecimalLit,
-                                                                     TKind::OctalLit,
-                                                                     TKind::HexLit],
-                                                                self.token.clone())));
+                Err(self.err(ErrorKind::unexpected_token(vec![TKind::DecimalLit,
+                                                              TKind::OctalLit,
+                                                              TKind::HexLit],
+                                                         self.token.clone())))
             }
         }
     }

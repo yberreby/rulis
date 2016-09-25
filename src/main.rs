@@ -29,7 +29,7 @@ fn main() {
 }
 
 fn handle_input(input: &str) {
-    match rulis::eval(&input) {
+    match rulis::eval(input) {
         Ok(res) => println!("{}", res),
         Err(err) => println!("Error: {}", err),
     }
