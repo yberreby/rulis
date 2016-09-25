@@ -2,9 +2,15 @@ mod sexpr;
 mod qexpr;
 pub use self::sexpr::*;
 pub use self::qexpr::*;
-
 use std::fmt;
+use std::collections::HashMap;
 
+pub type Env = HashMap<String, Expr>;
+
+// FIXME: clearly separate AST and interpreter data structures clearly.
+// For now, they live together.
+// XXX: shall we keep this Result<T, E>?
+pub type Function = fn(&mut Env, &[Expr]) -> Result<Expr, String>;
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum Expr {
@@ -12,6 +18,7 @@ pub enum Expr {
     Symbol(String),
     SExpr(SExpr),
     QExpr(QExpr),
+    Function(Function),
 }
 
 impl Expr {

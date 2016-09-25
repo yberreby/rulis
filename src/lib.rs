@@ -3,14 +3,17 @@ extern crate log;
 extern crate num;
 
 mod parser;
-mod ast;
+mod value;
 mod interpreter;
+pub use self::interpreter::Interpreter;
 
-pub fn eval(s: &str) -> Result<ast::Expr, String> {
+/// Evaluate a source string in a fresh context.
+pub fn eval(s: &str) -> Result<value::Expr, String> {
     let mut expr = try!(parser::parse(s).map_err(|e| format!("{}", e)));
     debug!("Expr: (debug): {:?}", expr);
     debug!("Expr: (display): {}", expr);
-    let res = try!(interpreter::eval_expr(&mut expr));
+    let mut interpreter = Interpreter::new();
+    let res = try!(interpreter.evaluate_expression(&mut expr));
     Ok(res)
 }
 

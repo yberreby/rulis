@@ -1,44 +1,60 @@
 mod builtins;
-use ast::{Expr, SExpr};
+use value::{Expr, SExpr, Env};
 
-pub fn eval_sexpr(sexpr: &mut [Expr]) -> Result<Expr, String> {
+pub struct Interpreter {
+    /// The environment maps defined symbols to values.
+    env: Env,
+}
+
+impl Interpreter {
+    pub fn new() -> Interpreter {
+        let mut env = Env::new();
+        builtins::add_builtins(&mut env);
+
+        Interpreter { env: env }
+    }
+
+    pub fn evaluate(&mut self, s: &str) -> Result<Expr, String> {
+        unimplemented!()
+    }
+
+
+    pub fn evaluate_expression(&mut self, e: &mut Expr) -> Result<Expr, String> {
+        unimplemented!()
+    }
+}
+
+fn eval_sexpr(env: &mut Env, sexpr: &mut [Expr]) -> Result<Expr, String> {
     println!("eval sexpr: {:?}", sexpr);
     if sexpr.len() == 0 {
         return Ok(Expr::SExpr(SExpr::empty()));
     }
 
     for operand in sexpr.iter_mut() {
-        *operand = try!(eval_expr(operand));
+        *operand = try!(eval_expr(env, operand));
     }
 
     let (operator, arguments) = sexpr.split_at_mut(1);
 
-    if let Expr::Symbol(ref s) = operator[0] {
-        call(s, arguments)
+    if let Expr::Function(ref f) = operator[0] {
+        (*f)(env, arguments)
     } else {
-        Err(format!("first element should be a symbol, but was {:?}",
+        Err(format!("first element should be function, but was {:?}",
                     operator[0]))
     }
 }
 
 
-pub fn eval_expr(expr: &mut Expr) -> Result<Expr, String> {
+fn eval_expr(env: &mut Env, expr: &mut Expr) -> Result<Expr, String> {
     match *expr {
         Expr::Integer(_) | Expr::QExpr(_) => Ok(expr.clone()),
-        Expr::SExpr(ref mut sexpr) => eval_sexpr(&mut sexpr.exprs),
-        // TODO: implement name resolution (identifiers).
-        Expr::Symbol(_) => Ok(expr.clone()),
-    }
-}
 
-fn call(operator: &str, arguments: &[Expr]) -> Result<Expr, String> {
-    match operator {
-        "+" | "-" | "*" | "/" => builtins::arithmetic_operation(operator, arguments),
-        "list" => builtins::list(arguments),
-        "head" => builtins::head(arguments),
-        "tail" => builtins::tail(arguments),
-        "join" => builtins::join(arguments),
-        "eval" => builtins::eval(arguments),
-        _ => Err(format!("unknown builtin: {}", operator)),
+        // TODO: implement name resolution (identifiers).
+        Expr::Symbol(ref symbol) => {
+            let val = try!(env.get(&*symbol)
+                .ok_or_else(|| format!("undefined symbol: {}", symbol)));
+            Ok(val.clone())
+        }
+        Expr::SExpr(ref mut sexpr) => eval_sexpr(env, &mut sexpr.exprs),
     }
 }

@@ -1,4 +1,26 @@
-use ast::{Expr, QExpr};
+use value::{Expr, QExpr, Env, Function};
+
+pub fn add_builtins(env: &mut Env) {
+    add_builtin_fn(env, "list", builtin_list);
+    add_builtin_fn(env, "head", builtin_head);
+    add_builtin_fn(env, "tail", builtin_tail);
+    add_builtin_fn(env, "eval", builtin_eval);
+    add_builtin_fn(env, "join", builtin_join);
+}
+
+fn add_builtin_fn<S: Into<String>>(env: &mut Env, name: S, f: Function) {
+    add_builtin(env, name.into(), Expr::Function(f));
+}
+
+fn add_builtin(env: &mut Env, name: String, value: Expr) {
+    env.insert(name, value);
+}
+
+// Built-in functions
+
+
+
+// Arithmetic operations
 
 pub fn arithmetic_operation(operator: &str, arguments: &[Expr]) -> Result<Expr, String> {
     let mut numeric_arguments = arguments.iter().map(|e| e.as_i64().unwrap());
@@ -27,12 +49,29 @@ pub fn arithmetic_operation(operator: &str, arguments: &[Expr]) -> Result<Expr, 
     Ok(Expr::Integer(result))
 }
 
-pub fn list(arguments: &[Expr]) -> Result<Expr, String> {
+fn builtin_add(_env: &mut Env, arguments: &[Expr]) -> Result<Expr, String> {
+    arithmetic_operation("+", arguments);
+}
+
+fn builtin_sub(_env: &mut Env, arguments: &[Expr]) -> Result<Expr, String> {
+    arithmetic_operation("-", arguments);
+}
+
+fn builtin_mul(_env: &mut Env, arguments: &[Expr]) -> Result<Expr, String> {
+    arithmetic_operation("*", arguments);
+}
+
+fn builtin_div(_env: &mut Env, arguments: &[Expr]) -> Result<Expr, String> {
+    arithmetic_operation("/", arguments);
+}
+
+
+fn builtin_list(_env: &mut Env, arguments: &[Expr]) -> Result<Expr, String> {
     Ok(Expr::QExpr(QExpr::new(arguments.into())))
 }
 
 /// head returns a QExpr containing one element, the first element of the qexpr it was passed.
-pub fn head(arguments: &[Expr]) -> Result<Expr, String> {
+fn builtin_head(_env: &mut Env, arguments: &[Expr]) -> Result<Expr, String> {
     if arguments.len() > 1 {
         return Err("too many arguments".into());
     }
@@ -45,7 +84,7 @@ pub fn head(arguments: &[Expr]) -> Result<Expr, String> {
     }
 }
 
-pub fn tail(arguments: &[Expr]) -> Result<Expr, String> {
+fn builtin_tail(_env: &mut Env, arguments: &[Expr]) -> Result<Expr, String> {
     if arguments.len() > 1 {
         return Err("too many arguments".into());
     }
@@ -58,7 +97,7 @@ pub fn tail(arguments: &[Expr]) -> Result<Expr, String> {
     }
 }
 
-pub fn join(arguments: &[Expr]) -> Result<Expr, String> {
+fn builtin_join(_env: &mut Env, arguments: &[Expr]) -> Result<Expr, String> {
     let mut v = Vec::new();
 
     for arg in arguments.to_vec() {
@@ -74,14 +113,14 @@ pub fn join(arguments: &[Expr]) -> Result<Expr, String> {
     Ok(Expr::QExpr(QExpr::new(v)))
 }
 
-pub fn eval(arguments: &[Expr]) -> Result<Expr, String> {
+fn builtin_eval(env: &mut Env, arguments: &[Expr]) -> Result<Expr, String> {
     if arguments.len() > 1 {
         return Err("too many arguments".into());
     }
 
     if let Expr::QExpr(mut qexpr) = arguments[0].clone() {
         println!("eval qexpr: {}", qexpr);
-        super::eval_sexpr(&mut qexpr)
+        super::eval_sexpr(env, &mut qexpr)
     } else {
         return Err("type error, expected Q-Expression".into());
     }
