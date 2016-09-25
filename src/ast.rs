@@ -1,4 +1,5 @@
 use std::fmt;
+use std::ops::Deref;
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct SExpr {
@@ -8,6 +9,18 @@ pub struct SExpr {
 impl SExpr {
     pub fn new(v: Vec<Expr>) -> SExpr {
         SExpr { exprs: v }
+    }
+
+    pub fn empty() -> SExpr {
+        SExpr::new(vec![])
+    }
+}
+
+impl Deref for SExpr {
+    type Target = [Expr];
+
+    fn deref(&self) -> &[Expr] {
+        &self.exprs
     }
 }
 
@@ -29,10 +42,21 @@ impl fmt::Display for SExpr {
 #[derive(Debug, Clone, PartialEq)]
 pub enum Expr {
     Integer(i64),
-    Symbol(String),
+    Symbol(Symbol),
     SExpr(SExpr),
 }
 
+impl Expr {
+    pub fn as_i64(&self) -> Option<i64> {
+        if let Expr::Integer(i) = *self {
+            Some(i)
+        } else {
+            None
+        }
+    }
+}
+
+pub type Symbol = String;
 
 impl fmt::Display for Expr {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {

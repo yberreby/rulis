@@ -13,17 +13,6 @@ pub fn parse(s: &str) -> Result<ast::SExpr, String> {
     parser.parse_sexpr().map_err(|e| e.kind.to_string())
 }
 
-// struct Parser<I: Iterator<Item = Token>> {
-//     input: I,
-// }
-//
-// impl<I: Iterator<Item = Token>> Parser<I> {
-//     pub fn new<T: Into<I>>(x: T) -> Parser<I> {
-//         Parser { input: x.into() }
-//     }
-// }
-
-
 pub struct Parser<R: Iterator<Item = Token>> {
     /// Our source of tokens.
     /// Users can choose to read all the tokens up-front, or to read them lazily.
