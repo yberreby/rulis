@@ -46,7 +46,16 @@ pub fn head(arguments: &[Expr]) -> Result<Expr, String> {
 }
 
 pub fn tail(arguments: &[Expr]) -> Result<Expr, String> {
-    unimplemented!()
+    if arguments.len() > 1 {
+        return Err("too many arguments".into());
+    }
+
+    if let Expr::QExpr(qexpr) = arguments[0].clone() {
+        let tail = qexpr[1..].to_vec();
+        Ok(Expr::QExpr(QExpr::new(tail)))
+    } else {
+        return Err("type error, expected Q-Expression".into());
+    }
 }
 
 pub fn join(arguments: &[Expr]) -> Result<Expr, String> {
