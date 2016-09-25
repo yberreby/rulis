@@ -155,10 +155,24 @@ impl<'src> Lexer<'src> {
     /// Skip whitespace and comments, returning whether at least one newline was encountered.
     fn skip_whitespace_and_comments(&mut self) {
         while let Some(c) = self.current_char {
-            self.skip_comment();
-            self.skip_contiguous_whitespace();
+            if c == ';' {
+                while let Some(c) = self.current_char {
+                    if c == '\n' {
+                        break;
+                    } else {
+                        self.bump();
+                    }
+                }
 
-            if self.current_char != Some(';') {
+                // Resume whitespace skipping.
+                // Since we have not bumped past the newline character,
+                // the next iteration of the loop will catch it.
+                continue;
+            }
+
+            if c.is_whitespace() {
+                self.bump();
+            } else {
                 break;
             }
         }
