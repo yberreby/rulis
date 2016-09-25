@@ -21,7 +21,7 @@ pub fn eval_sexpr(sexpr: &mut [Expr]) -> Result<Expr, String> {
 
 fn eval_expr(expr: &mut Expr) -> Result<Expr, String> {
     match expr {
-        &mut Expr::Integer(i) => Ok(expr.clone()),
+        &mut Expr::Integer(_) => Ok(expr.clone()),
         &mut Expr::SExpr(ref mut sexpr) => eval_sexpr(&mut sexpr.exprs),
         &mut Expr::Symbol(_) => Ok(expr.clone()), // TODO: implement
     }

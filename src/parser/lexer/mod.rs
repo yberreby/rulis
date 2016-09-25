@@ -133,25 +133,6 @@ impl<'src> Lexer<'src> {
         }
     }
 
-    fn skip_contiguous_whitespace(&mut self) {
-        while let Some(c) = self.current_char {
-            if c.is_whitespace() {
-                self.bump();
-            }
-        }
-    }
-
-    fn skip_comment(&mut self) {
-        if self.current_char == Some(';') {
-            while let Some(c) = self.current_char {
-                self.bump();
-                if c == '\n' {
-                    break;
-                }
-            }
-        }
-    }
-
     /// Skip whitespace and comments, returning whether at least one newline was encountered.
     fn skip_whitespace_and_comments(&mut self) {
         while let Some(c) = self.current_char {

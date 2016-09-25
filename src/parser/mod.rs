@@ -2,13 +2,11 @@ mod lexer;
 mod error;
 
 use std::iter::Peekable;
-use std::str::FromStr;
 
 use ast;
 use self::error::*;
 use self::lexer::{Token, TKind};
 use num::bigint::BigInt;
-use num::BigRational;
 use num::ToPrimitive;
 
 pub fn parse(s: &str) -> Result<ast::SExpr, String> {
@@ -23,8 +21,6 @@ pub struct Parser<R: Iterator<Item = Token>> {
     reader: Peekable<R>,
     /// The current token.
     token: Token,
-    /// (XXX) Seems to indicate the current level of nesting when parsing expressions.
-    expression_level: u32,
 }
 
 impl<R: Iterator<Item = Token>> Parser<R> {
@@ -34,8 +30,6 @@ impl<R: Iterator<Item = Token>> Parser<R> {
         Parser {
             token: first_tok,
             reader: it.peekable(),
-            // In the Go code, the initial value of `exprLev` implicitly defaults to 0.
-            expression_level: 0,
         }
     }
 
@@ -69,13 +63,6 @@ impl<R: Iterator<Item = Token>> Parser<R> {
         }
         self.bump();
         Ok(())
-    }
-
-    fn eat_and_get(&mut self, expected: TKind) -> PResult<Token> {
-        if self.token.kind != expected {
-            return Err(self.err(ErrorKind::unexpected_token(vec![expected], self.token.clone())));
-        }
-        Ok(self.bump_and_get())
     }
 
     /// Build a parse error.
@@ -177,76 +164,6 @@ impl<R: Iterator<Item = Token>> Parser<R> {
             } else {
                 let msg = format!("invalid character in {}: {}", token_name, c);
                 return Err(self.err(ErrorKind::other(msg)));
-            }
-        }
-
-        Ok(res)
-    }
-
-    /// Interpret the value of a float/imaginary literal and return the result as a BigRational.
-    /// If this method is being used to parse an imaginary lit, don't include the trailing `i`.
-    fn interpret_float_lit(&mut self, value: &str, token_name: &str) -> PResult<BigRational> {
-        // float_lit = decimals "." [ decimals ] [ exponent ] |
-        //             decimals exponent |
-        //             "." decimals [ exponent ] .
-        // decimals  = decimal_digit { decimal_digit } .
-        // exponent  = ( "e" | "E" ) [ "+" | "-" ] decimals .
-
-        let mut res = BigRational::from_integer(BigInt::from(0u8));
-        let mut chars = value.chars().peekable();
-        let mut parse_exponent = false;
-        let mut digits_after_dot = 0u32; // the number of digits after the dot we are
-
-        while let Some(c) = chars.next() {
-            if c == '.' {
-                digits_after_dot = 1;
-            } else if c == 'e' || c == 'E' {
-                parse_exponent = true;
-                break;
-            } else {
-                let digit = c.to_digit(10).expect("BUG: invalid char in float/imag lit");
-                let digit_value = BigRational::from_integer(BigInt::from(digit));
-
-                if digits_after_dot == 0 {
-                    res = res * BigRational::from_integer(BigInt::from(10u8));
-                    res = res + BigRational::from_integer(BigInt::from(digit));
-                } else {
-                    res = res +
-                          digit_value /
-                          BigRational::from_integer(BigInt::from(10u32.pow(digits_after_dot)));
-
-                    digits_after_dot += 1;
-                }
-            }
-        }
-
-        if parse_exponent {
-            let mut negative = false;
-            if let Some(&c) = chars.peek() {
-                if c == '+' {
-                    chars.next();
-                } else if c == '-' {
-                    negative = true;
-                    chars.next();
-                }
-            } else {
-                // Empty exponent
-                return Err(self.err(ErrorKind::other(format!("malformed {} exponent",
-                                                             token_name))));
-            }
-
-            let mut exponent = 0;
-            while let Some(c) = chars.next() {
-                exponent *= 10;
-                exponent += c.to_digit(10).expect("BUG: invalid char in float/imag lit exponent");
-            }
-
-            for _ in 0..exponent {
-                if negative {
-                    res = res / BigRational::from_integer(BigInt::from(10u8));
-                } else {
-                    res = res * BigRational::from_integer(BigInt::from(10u8));
-                }
             }
         }
 
