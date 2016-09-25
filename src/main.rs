@@ -1,35 +1,37 @@
 extern crate rulis;
 extern crate env_logger;
+extern crate rustyline;
 
-use std::io::{self, Write};
 use std::env;
-
-fn flush() {
-    io::stdout().flush().expect("failed to flush");
-}
+use rustyline::error::ReadlineError;
+use rustyline::Editor;
 
 fn main() {
     env::set_var("RUST_LOG", env::var("LOG").unwrap_or("info".into()));
     env_logger::init().unwrap();
 
-    let mut input = String::new();
+    let mut rl = Editor::<()>::new();
     loop {
-        print!("> ");
-        flush();
+        let readline = rl.readline("> ");
 
-        match io::stdin().read_line(&mut input) {
-            Ok(0) => {
-                println!("\nReceived EOF, exiting");
+        match readline {
+            Ok(line) => {
+                rl.add_history_entry(&line);
+                handle_input(&line);
+            }
+            Err(ReadlineError::Interrupted) => {
+                println!("CTRL-C");
+                break;
+            }
+            Err(ReadlineError::Eof) => {
+                println!("Received EOF, exiting");
                 return;
             }
-            Ok(_) => handle_input(&input),
             Err(e) => {
                 println!("Failed to read input: {}", e);
                 return;
             }
         }
-
-        input.clear();
     }
 }
 
