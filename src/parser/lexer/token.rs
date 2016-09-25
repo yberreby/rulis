@@ -29,4 +29,6 @@ pub enum TKind {
     FloatLit,
     DecimalLit,
     StringLit,
+    /// End Of File.
+    Eof,
 }
