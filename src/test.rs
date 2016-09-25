@@ -32,3 +32,26 @@ fn simple_arithmetic_evaluation_works() {
         println!("OK");
     }
 }
+
+#[test]
+fn qexpressions_builtins_work() {
+    let runs = [("(list 1 2 3 4)", "{1 2 3 4}"),
+                ("{head (list 1 2 3 4)}", "{head (list 1 2 3 4)}"),
+                ("(eval {head (list 1 2 3 4)})", "{1}"),
+                ("(tail {tail tail tail})", "{tail tail}"),
+                ("(eval (tail {tail tail {5 6 7}}))", "{6 7}"),
+                ("(eval (head {(+ 1 2) (+ 10 20)}))", "3")];
+
+    for &(ref operation, expected) in &runs {
+        print!("{}... ", operation);
+        let expected = Ok(expected);
+        let actual = eval(&operation).map(|x| x.to_string());
+        assert_eq!(actual.as_ref().map(|s| &s[..]),
+                   expected,
+                   "expected {:?}, got {:?} when evaluating {:?}",
+                   expected,
+                   actual,
+                   operation);
+        println!("OK");
+    }
+}
