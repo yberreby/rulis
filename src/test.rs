@@ -37,6 +37,7 @@ fn simple_arithmetic_evaluation_works() {
 fn qexpressions_builtins_work() {
     let runs = [("(list 1 2 3 4)", "{1 2 3 4}"),
                 ("{head (list 1 2 3 4)}", "{head (list 1 2 3 4)}"),
+                ("(head (list 1 2 3 4))", "{1}"),
                 ("(eval {head (list 1 2 3 4)})", "{1}"),
                 ("(tail {tail tail tail})", "{tail tail}"),
                 ("(eval (tail {tail tail {5 6 7}}))", "{6 7}"),

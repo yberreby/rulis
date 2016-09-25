@@ -30,15 +30,28 @@ pub fn arithmetic_operation(operator: &str, arguments: &[Expr]) -> Result<Expr, 
 pub fn list(operator: &str, arguments: &[Expr]) -> Result<Expr, String> {
     Ok(Expr::QExpr(QExpr::new(arguments.into())))
 }
+
 pub fn head(operator: &str, arguments: &[Expr]) -> Result<Expr, String> {
-    unimplemented!()
+    if arguments.len() > 1 {
+        return Err("too many arguments".into());
+    }
+
+    if let Expr::QExpr(qexpr) = arguments[0].clone() {
+        let head = qexpr[0].clone();
+        Ok(head)
+    } else {
+        return Err("type error, expected Q-Expression".into());
+    }
 }
+
 pub fn tail(operator: &str, arguments: &[Expr]) -> Result<Expr, String> {
     unimplemented!()
 }
+
 pub fn join(operator: &str, arguments: &[Expr]) -> Result<Expr, String> {
     unimplemented!()
 }
+
 pub fn eval(operator: &str, arguments: &[Expr]) -> Result<Expr, String> {
     unimplemented!()
 }
