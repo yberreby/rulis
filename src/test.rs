@@ -1,6 +1,7 @@
 use value::Expr;
 use eval;
 use std::fmt::Debug;
+use Interpreter;
 
 /// Generic helper method to simplify testing.
 fn test_runs<'a,
@@ -62,4 +63,19 @@ fn qexpressions_builtins_work() {
     test_runs(runs.into_iter(),
               |r| r.map(|x| x.to_string()),
               |s| Ok(s.into()));
+}
+
+#[test]
+fn lambdas_work() {
+    let src = r"\
+(def {myFunc} (\ {a} {+ a 5}))
+(myFunc 10)
+";
+
+    let mut interpreter = Interpreter::new();
+    let mut last_val = None;
+    for line in src.lines() {
+        last_val = Some(interpreter.evaluate(line).unwrap());
+    }
+    assert_eq!(last_val.unwrap(), Expr::Integer(15));
 }
