@@ -5,8 +5,38 @@ pub use self::qexpr::*;
 use std::fmt;
 use std::collections::HashMap;
 use interpreter::eval_sexpr;
+use std::rc::Rc;
+use std::cell::RefCell;
 
-pub type Env = HashMap<String, Expr>;
+pub struct Env {
+    own_map: HashMap<String, Expr>,
+    parent: Option<Rc<RefCell<Env>>>,
+}
+
+impl Env {
+    pub fn get(&self, key: &str) -> Option<Expr> {
+        self.own_map
+            .get(key)
+            //.map(|expr| Rc::new(RefCell::new(expr.clone())))
+            .or_else(|| {
+                self.parent.and_then(|p| p.borrow().get(key)).clone()
+                    //.map(|e| Rc::new(RefCell::new(e.clone())))
+            })
+    }
+
+    pub fn define_local<K: Into<String>>(&mut self, key: K, value: Expr) {
+        self.own_map.insert(key.into(), value)
+    }
+
+    pub fn define_global<K: Into<String>>(&mut self, key: K, value: Expr) {
+        let mut e = &mut self;
+        while let Some(e_inner) = e.parent {
+            e = e_inner;
+        }
+        // `e` is now the top-level environment, i.e., the global env.
+        e.define_local(key, value);
+    }
+}
 
 pub type InnerFunc = fn(&mut Env, &[Expr]) -> Result<Expr, String>;
 
