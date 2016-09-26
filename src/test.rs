@@ -1,4 +1,4 @@
-use ast;
+use value::Expr;
 use eval;
 
 #[test]
@@ -21,7 +21,7 @@ fn simple_arithmetic_evaluation_works() {
 
     for &(ref operation, expected) in &runs {
         print!("{}... ", operation);
-        let expected = Ok(ast::Expr::Integer(expected));
+        let expected = Ok(Expr::Integer(expected));
         let actual = eval(&operation);
         assert_eq!(actual,
                    expected,
