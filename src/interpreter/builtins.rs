@@ -1,7 +1,10 @@
-use value::{Expr, SExpr, QExpr, Env, Function, InnerFunc};
+use value::{Expr, SExpr, QExpr, Env, Function, InnerFunc, Lambda};
+
+// TODO: clean up error handling in this module. It's a mess.
 
 pub fn add_builtins(env: &mut Env) {
     add_builtin_fn(env, "def", builtin_def);
+    add_builtin_fn(env, "\\", builtin_lambda);
 
     add_builtin_fn(env, "list", builtin_list);
     add_builtin_fn(env, "head", builtin_head);
@@ -141,6 +144,25 @@ fn builtin_def(env: &mut Env, arguments: &[Expr]) -> Result<Expr, String> {
 
 
         Ok(Expr::SExpr(SExpr::empty()))
+    } else {
+        return Err(format!("expected Q-expression as first argument, found {:?}",
+                           arguments[0]));
+    }
+}
+
+
+fn builtin_lambda(env: &mut Env, arguments: &[Expr]) -> Result<Expr, String> {
+    if arguments.len() != 2 {
+        return Err(format!("expected 2 arguments, got {}", arguments.len()));
+    }
+
+    if let Expr::QExpr(params) = arguments[0].clone() {
+        if let Expr::QExpr(body) = arguments[1].clone() {
+            Ok(Expr::Function(Function::Lambda(try!(Lambda::new(params, body)))))
+        } else {
+            return Err(format!("expected Q-expression as second argument, found {:?}",
+                               arguments[1]));
+        }
     } else {
         return Err(format!("expected Q-expression as first argument, found {:?}",
                            arguments[0]));
