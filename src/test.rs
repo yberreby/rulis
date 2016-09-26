@@ -1,5 +1,6 @@
 use value::Expr;
 use eval;
+use std::fmt::Debug;
 
 #[test]
 fn invalid_code_is_rejected() {
@@ -7,10 +8,19 @@ fn invalid_code_is_rejected() {
     assert!(eval(src).is_err());
 }
 
-fn test_runs<'a, I: Iterator<Item = (&'a str, Result<Expr, String>)>>(runs: I) {
+fn test_runs<'a,
+             T: PartialEq + Debug,
+             U,
+             I: Iterator<Item = (&'a str, U)>,
+             F: Fn(Result<Expr, String>) -> T,
+             G: Fn(U) -> T>
+    (runs: I,
+     actual_f: F,
+     expected_f: G) {
     for (operation, expected) in runs {
         print!("{}... ", operation);
-        let actual = eval(&operation);
+        let actual: T = actual_f(eval(&operation));
+        let expected: T = expected_f(expected);
         assert_eq!(actual,
                    expected,
                    "expected {:?}, got {:?} when evaluating {:?}",
@@ -34,7 +44,7 @@ fn simple_arithmetic_evaluation_works() {
                 ("(* 1 1 5 1 1 1 7 0 1 1 11)", 0),
                 ("(/ 128674 48 3)", 893)];
 
-    test_runs(runs.iter().map(|&(s, i)| (s, Ok(Expr::Integer(i)))));
+    test_runs(runs.to_vec().into_iter(), |s| s, |i| Ok(Expr::Integer(i)));
 }
 
 #[test]
