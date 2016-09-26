@@ -25,7 +25,7 @@ impl Interpreter {
     }
 }
 
-fn eval_sexpr(env: &mut Env, sexpr: &mut [Expr]) -> Result<Expr, String> {
+pub fn eval_sexpr(env: &mut Env, sexpr: &mut [Expr]) -> Result<Expr, String> {
     debug!("eval sexpr: {:?}", sexpr);
     if sexpr.len() == 0 {
         return Ok(Expr::SExpr(SExpr::empty()));

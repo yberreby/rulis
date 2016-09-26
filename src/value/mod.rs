@@ -4,6 +4,7 @@ pub use self::sexpr::*;
 pub use self::qexpr::*;
 use std::fmt;
 use std::collections::HashMap;
+use interpreter::eval_sexpr;
 
 pub type Env = HashMap<String, Expr>;
 
@@ -47,7 +48,13 @@ impl Lambda {
             self.local_env.insert(self.parameters[i].clone(), arg.clone());
         }
 
-        unimplemented!()
+        eval_sexpr(&mut self.local_env, &mut self.body)
+    }
+}
+
+impl fmt::Display for Lambda {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "(\\ {:?} {:?})", self.parameters, self.body)
     }
 }
 
@@ -95,12 +102,18 @@ impl PartialEq for Function {
     }
 }
 
-impl fmt::Debug for Function {
+impl fmt::Display for Function {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match *self {
             Function::Builtin(f_ptr) => write!(f, "<a Rulis function @ {:p}>", f_ptr as *const ()),
-            Function::Lambda(ref lambda) => write!(f, "lambda: {:?}", lambda),
+            Function::Lambda(ref lambda) => write!(f, "lambda: {}", lambda),
         }
+    }
+}
+
+impl fmt::Debug for Function {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{}", self)
     }
 }
 
@@ -132,7 +145,7 @@ impl fmt::Display for Expr {
             Symbol(ref s) => write!(f, "{}", s),
             SExpr(ref sexpr) => write!(f, "{}", sexpr),
             QExpr(ref qexpr) => write!(f, "{}", qexpr),
-            Function(ref func) => write!(f, "{:?}", func),
+            Function(ref func) => write!(f, "{}", func),
         }
     }
 }
