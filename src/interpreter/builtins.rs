@@ -16,7 +16,7 @@ pub fn add_builtins(env: &mut Env) {
 }
 
 fn add_builtin_fn<S: Into<String>>(env: &mut Env, name: S, f: InnerFunc) {
-    add_builtin(env, name.into(), Expr::Function(Function::new(f)));
+    add_builtin(env, name.into(), Expr::Function(Function::from_builtin(f)));
 }
 
 fn add_builtin(env: &mut Env, name: String, value: Expr) {

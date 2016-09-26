@@ -9,40 +9,82 @@ pub type Env = HashMap<String, Expr>;
 
 pub type InnerFunc = fn(&mut Env, &[Expr]) -> Result<Expr, String>;
 
-// FIXME: clearly separate AST and interpreter data structures clearly.
-// For now, they live together.
-// XXX: shall we keep this Result<T, E>?
-#[derive(Copy)]
-pub struct Function {
-    f: InnerFunc,
+pub enum Function {
+    Builtin(InnerFunc),
+    Lambda(Lambda),
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct Lambda {
+    local_env: Env,
+    parameters: QExpr,
+    body: QExpr,
+}
+
+impl Lambda {
+    pub fn new(parameters: QExpr, body: QExpr) -> Lambda {
+        Lambda {
+            local_env: Env::new(),
+            parameters: parameters,
+            body: body,
+        }
+    }
+
+    pub fn call(&mut self, env: &mut Env, arguments: &[Expr]) -> Result<Expr, String> {
+        unimplemented!()
+    }
 }
 
 impl Function {
-    pub fn new(f: InnerFunc) -> Function {
-        Function { f: f }
+    pub fn from_builtin(f: InnerFunc) -> Function {
+        Function::Builtin(f)
     }
 
-    pub fn call(&self, env: &mut Env, arguments: &[Expr]) -> Result<Expr, String> {
-        (self.f)(env, arguments)
+    pub fn call(&mut self, env: &mut Env, arguments: &[Expr]) -> Result<Expr, String> {
+        match *self {
+            Function::Builtin(f) => f(env, arguments),
+            Function::Lambda(ref mut f) => f.call(env, arguments),
+        }
     }
 }
 
 impl Clone for Function {
     fn clone(&self) -> Self {
-        Function { f: self.f }
+        match *self {
+            Function::Builtin(f) => Function::Builtin(f),
+            Function::Lambda(ref lambda) => Function::Lambda(lambda.clone()),
+        }
     }
 }
 
 impl PartialEq for Function {
     fn eq(&self, other: &Function) -> bool {
         // XXX: make sure this is correct.
-        self.f as *const () == other.f as *const ()
+        match *self {
+            Function::Builtin(ref builtin) => {
+                if let Function::Builtin(ref other_builtin) = *other {
+                    *builtin as *const () == *other_builtin as *const ()
+                } else {
+                    false
+                }
+            }
+            Function::Lambda(ref lambda) => {
+                if let Function::Lambda(ref other_lambda) = *other {
+                    lambda == other_lambda
+                } else {
+                    false
+                }
+            }
+        }
     }
 }
 
 impl fmt::Debug for Function {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "<a Rulis function @ {}>", self.f as usize)
+        match *self {
+            Function::Builtin(f_ptr) => write!(f, "<a Rulis function @ {:p}>", f_ptr as *const ()),
+            Function::Lambda(ref lambda) => write!(f, "lambda: {:?}", lambda),
+        }
     }
 }
 
