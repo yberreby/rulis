@@ -34,27 +34,41 @@ impl fmt::Display for ErrorKind {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match *self {
             ErrorKind::UnexpectedToken { ref found, ref expected } => {
+                if found.kind == TKind::Eof {
+                    try!(write!(f, "unexpected end of input"));
+                    if !expected.is_empty() {
+                        try!(write!(f, ", "));
+                        try!(print_expected(f, &expected));
+                    }
+                    return Ok(());
+                }
+
                 if expected.is_empty() {
                     return write!(f, "unexpected token \"{:?}\"", found);
                 }
 
-                try!(write!(f, "expected "));
-
-                if expected.len() > 2 {
-                    try!(write!(f, "one of "));
-
-                    let mut sep = " ";
-                    for tk in expected {
-                        try!(write!(f, "\"{:?}\"{}", tk, sep));
-                        sep = ", ";
-                    }
-                } else if expected.len() == 1 {
-                    try!(write!(f, "\"{:?}\" ", expected[0]));
-                }
-
+                try!(print_expected(f, &expected));
                 write!(f, "found \"{:?}\"", found)
             }
             ErrorKind::Other { ref msg } => write!(f, "{}", msg),
         }
     }
+}
+
+fn print_expected(f: &mut fmt::Formatter, expected: &[TKind]) -> fmt::Result {
+    try!(write!(f, "expected "));
+
+    if expected.len() > 2 {
+        try!(write!(f, "one of "));
+
+        let mut sep = " ";
+        for tk in expected {
+            try!(write!(f, "\"{:?}\"{}", tk, sep));
+            sep = ", ";
+        }
+    } else if expected.len() == 1 {
+        try!(write!(f, "\"{:?}\" ", expected[0]));
+    }
+
+    Ok(())
 }
