@@ -17,20 +17,36 @@ pub enum Function {
 #[derive(Debug, Clone, PartialEq)]
 pub struct Lambda {
     local_env: Env,
-    parameters: QExpr,
+    parameters: Vec<String>,
     body: QExpr,
 }
 
 impl Lambda {
-    pub fn new(parameters: QExpr, body: QExpr) -> Lambda {
-        Lambda {
-            local_env: Env::new(),
-            parameters: parameters,
-            body: body,
+    pub fn new(parameters: QExpr, body: QExpr) -> Result<Lambda, String> {
+        let mut symbol_parameters = Vec::new();
+
+        for param in parameters.exprs {
+            if let Expr::Symbol(s) = param {
+                symbol_parameters.push(s);
+            } else {
+                return Err(format!("expected symbol in parameter list, found {:?}", param));
+            }
         }
+
+        Ok(Lambda {
+            local_env: Env::new(),
+            parameters: symbol_parameters,
+            body: body,
+        })
     }
 
     pub fn call(&mut self, env: &mut Env, arguments: &[Expr]) -> Result<Expr, String> {
+        for (i, arg) in arguments.iter().enumerate() {
+            // Populate our local environments with the arguments, which are named by the
+            // corresponding parameter name.
+            self.local_env.insert(self.parameters[i].clone(), arg.clone());
+        }
+
         unimplemented!()
     }
 }
