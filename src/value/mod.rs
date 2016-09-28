@@ -101,7 +101,7 @@ impl Lambda {
         })
     }
 
-    pub fn call(&mut self, env: &mut Env, arguments: &[Expr]) -> Result<Expr, String> {
+    pub fn call(&mut self, arguments: &[Expr]) -> Result<Expr, String> {
         for (i, arg) in arguments.iter().enumerate() {
             // Populate our local environment with the arguments, which are named by the
             // corresponding parameter name.
@@ -125,8 +125,15 @@ impl Function {
 
     pub fn call(&mut self, env: &mut Env, arguments: &[Expr]) -> Result<Expr, String> {
         match *self {
+            // Lambdas should only have access to the environment in which they were defined.
+            //
+            // The story is different for builtins. We control what they try to access, and
+            // guarantee they will only ever access other builtins. Therefore it is (or, at least,
+            // should be) fine to pass an env parameter local to the _call site_ to them, because
+            // they will not access any local variable, and this env should have a parent reference
+            // to the global scope.
             Function::Builtin(f) => f(env, arguments),
-            Function::Lambda(ref mut f) => f.call(env, arguments),
+            Function::Lambda(ref mut f) => f.call(arguments),
         }
     }
 }
