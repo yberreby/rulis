@@ -8,7 +8,7 @@ pub struct Interpreter {
 
 impl Interpreter {
     pub fn new() -> Interpreter {
-        let mut env = Env::new();
+        let mut env = Env::empty();
         builtins::add_builtins(&mut env);
 
         Interpreter { env: env }

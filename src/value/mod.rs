@@ -21,12 +21,6 @@ impl Env {
             parent: None,
         }
     }
-    // pub fn new() -> Env {
-    //     Env {
-    //         own_map: HashMap::new(),
-    //         parent: parent,
-    //     }
-    // }
 
     pub fn get(&self, key: &str) -> Option<Expr> {
         self.own_map
@@ -34,6 +28,7 @@ impl Env {
             .cloned()
             .or_else(|| {
                 self.parent
+                    .as_ref()
                     .and_then(|p| p.borrow().get(key))
             })
     }
@@ -49,8 +44,10 @@ impl Env {
             // inefficient or plainly incorrect.
             let mut e: *mut Env = self as *mut Env;
 
-            while let Some(p) = (*e).parent {
-                e = (*e).parent
+            while let Some(ref mut p) = (*e).parent {
+                e = p.borrow_mut()
+                    .parent
+                    .as_ref()
                     .map(|e| &mut (*e.borrow_mut()) as *mut Env)
                     .unwrap_or(::std::ptr::null_mut());
             }
@@ -87,7 +84,7 @@ impl Lambda {
         }
 
         Ok(Lambda {
-            local_env: Env::new(),
+            local_env: Env::empty(),
             parameters: symbol_parameters,
             body: body,
         })
@@ -95,9 +92,9 @@ impl Lambda {
 
     pub fn call(&mut self, env: &mut Env, arguments: &[Expr]) -> Result<Expr, String> {
         for (i, arg) in arguments.iter().enumerate() {
-            // Populate our local environments with the arguments, which are named by the
+            // Populate our local environment with the arguments, which are named by the
             // corresponding parameter name.
-            self.local_env.insert(self.parameters[i].clone(), arg.clone());
+            self.local_env.define_local(self.parameters[i].clone(), arg.clone());
         }
 
         eval_sexpr(&mut self.local_env, &mut self.body)
