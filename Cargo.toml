@@ -4,10 +4,7 @@ license = "MIT OR Apache-2.0"
 name = "rulis"
 version = "0.1.0"
 
-[build-dependencies]
-
 [dependencies]
-backtrace = "0.2.3"
 env_logger = "0.3.5"
 log = "0.3.6"
 num = "0.1.35"

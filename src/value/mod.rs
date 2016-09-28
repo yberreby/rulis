@@ -30,9 +30,6 @@ impl Env {
     }
 
     pub fn get(&self, key: &str) -> Option<Expr> {
-        println!("get called. Self: {:#?}", self);
-        let bt = ::backtrace::Backtrace::new();
-        println!("backtrace: {:?}", bt);
         self.own_map
             .get(key)
             .cloned()

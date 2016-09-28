@@ -1,7 +1,6 @@
 #[macro_use]
 extern crate log;
 extern crate num;
-extern crate backtrace;
 
 mod parser;
 mod value;
