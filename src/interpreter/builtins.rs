@@ -23,7 +23,7 @@ fn add_builtin_fn<S: Into<String>>(env: &mut Env, name: S, f: InnerFunc) {
 }
 
 fn add_builtin(env: &mut Env, name: String, value: Expr) {
-    env.insert(name, value);
+    env.define_local(name, value);
 }
 
 
@@ -136,7 +136,7 @@ fn builtin_def(env: &mut Env, arguments: &[Expr]) -> Result<Expr, String> {
         for (i, maybe_symbol) in symbols.to_vec().into_iter().enumerate() {
             if let Expr::Symbol(s) = maybe_symbol {
                 // We need +1 to skip past the first argument, which is the QExpr of symbols.
-                env.insert(s, arguments[i + 1].clone());
+                env.define_global(s, arguments[i + 1].clone());
             } else {
                 return Err(format!("expected symbol, found {:?}", maybe_symbol));
             }
