@@ -13,16 +13,23 @@ fn test_runs<'a,
     (runs: I,
      actual_f: F,
      expected_f: G) {
-    for (operation, expected) in runs {
-        print!("{}... ", operation);
-        let actual: T = actual_f(eval(&operation));
+    for (src, expected) in runs {
+        print!("{}... ", src);
+
+        let mut interpreter = Interpreter::new();
+        let mut last_val = None;
+        for line in src.lines() {
+            last_val = Some(interpreter.evaluate(line));
+        }
+
+        let actual: T = actual_f(last_val.unwrap());
         let expected: T = expected_f(expected);
         assert_eq!(actual,
                    expected,
                    "expected {:?}, got {:?} when evaluating {:?}",
                    expected,
                    actual,
-                   operation);
+                   src);
         println!("OK");
     }
 }
@@ -46,7 +53,7 @@ fn simple_arithmetic_evaluation_works() {
                     ("(* 1 1 5 1 1 1 7 0 1 1 11)", 0),
                     ("(/ 128674 48 3)", 893)];
 
-    test_runs(runs.into_iter(), |s| s, |i| Ok(Expr::Integer(i)));
+    test_runs(runs.into_iter(), |x| x, |i| Ok(Expr::Integer(i)));
 }
 
 #[test]
@@ -67,15 +74,11 @@ fn qexpressions_builtins_work() {
 
 #[test]
 fn lambdas_work() {
-    let src = r"\
+    let runs = vec![(r"\
 (def {myFunc} (\ {a} {+ a 5}))
 (myFunc 10)
-";
+",
+                     15)];
 
-    let mut interpreter = Interpreter::new();
-    let mut last_val = None;
-    for line in src.lines() {
-        last_val = Some(interpreter.evaluate(line).unwrap());
-    }
-    assert_eq!(last_val.unwrap(), Expr::Integer(15));
+    test_runs(runs.into_iter(), |x| x, |i| Ok(Expr::Integer(i)));
 }
