@@ -135,17 +135,19 @@ fn builtin_eval(env: &mut Env, arguments: &[Expr]) -> Result<Expr, String> {
 
 fn builtin_def(env: &mut Env, arguments: &[Expr]) -> Result<Expr, String> {
     if let Expr::QExpr(symbols) = arguments[0].clone() {
-        if symbols.len() != arguments.len() {
+        let values = &arguments[1..];
+        if symbols.len() != values.len() {
             return Err(format!("the amount of symbols being defined ({}) must be equal to the \
-                                number of values ({})",
+                                number of values ({}).\nSymbols: {:#?}\nValues: {:#?}",
                                symbols.len(),
-                               arguments.len()));
+                               values.len(),
+                               symbols,
+                               values));
         }
 
         for (i, maybe_symbol) in symbols.to_vec().into_iter().enumerate() {
             if let Expr::Symbol(s) = maybe_symbol {
-                // We need +1 to skip past the first argument, which is the QExpr of symbols.
-                env.define_global(s, arguments[i + 1].clone());
+                env.define_global(s, values[i].clone());
             } else {
                 return Err(format!("expected symbol, found {:?}", maybe_symbol));
             }
