@@ -30,6 +30,9 @@ impl Env {
     }
 
     pub fn get(&self, key: &str) -> Option<Expr> {
+        println!("get called. Self: {:#?}", self);
+        let bt = ::backtrace::Backtrace::new();
+        println!("backtrace: {:?}", bt);
         self.own_map
             .get(key)
             .cloned()
@@ -45,13 +48,13 @@ impl Env {
     }
 
     // BEWARE: there be unsafe code!
+    // XXX: needs _thorough_ testing
     pub fn define_global<K: Into<String>>(&mut self, key: K, value: Expr) {
         unsafe {
             // I couldn't find a way to way this work in safe code that wasn't either stupidly
             // inefficient or plainly incorrect.
             let mut e: *mut Env = self as *mut Env;
 
-            println!("e: {:?}", *e);
             while let Some(ref mut p) = (*e).parent {
                 e = p.borrow_mut()
                     .parent
@@ -92,7 +95,7 @@ impl Lambda {
         }
 
         Ok(Lambda {
-            local_env: Env::empty(),
+            local_env: Env::with_parent(parent),
             parameters: symbol_parameters,
             body: body,
         })
