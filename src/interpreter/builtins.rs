@@ -1,3 +1,5 @@
+use std::rc::Rc;
+use std::cell::RefCell;
 use value::{Expr, SExpr, QExpr, Env, Function, InnerFunc, Lambda};
 
 // TODO: clean up error handling in this module. It's a mess.
@@ -124,7 +126,7 @@ fn builtin_eval(env: &mut Env, arguments: &[Expr]) -> Result<Expr, String> {
     }
 
     if let Expr::QExpr(mut qexpr) = arguments[0].clone() {
-        println!("eval qexpr: {}", qexpr);
+        debug!("eval qexpr: {}", qexpr);
         super::eval_sexpr(env, &mut qexpr)
     } else {
         return Err("type error, expected Q-Expression".into());
@@ -158,7 +160,9 @@ fn builtin_lambda(env: &mut Env, arguments: &[Expr]) -> Result<Expr, String> {
 
     if let Expr::QExpr(params) = arguments[0].clone() {
         if let Expr::QExpr(body) = arguments[1].clone() {
-            Ok(Expr::Function(Function::Lambda(try!(Lambda::new(params, body)))))
+            debug!("builtin_lambda env: {:#?}", env);
+            // Note: we're _cloning_ the parent environment here, not keeping a reference to it.
+            Ok(Expr::Function(Function::Lambda(try!(Lambda::new(params, body, Rc::new(RefCell::new(env.clone())))))))
         } else {
             return Err(format!("expected Q-expression as second argument, found {:?}",
                                arguments[1]));
