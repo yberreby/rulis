@@ -42,13 +42,21 @@ impl Env {
         self.own_map.insert(key.into(), value);
     }
 
+    // BEWARE: there be unsafe code!
     pub fn define_global<K: Into<String>>(&mut self, key: K, value: Expr) {
-        let mut e = Rc::new(RefCell::new(self.parent.clone()));
-        while let Some(e_inner) = e.borrow().and_then(|e| e.borrow().parent) {
-            e = e_inner;
+        unsafe {
+            // I couldn't find a way to way this work in safe code that wasn't either stupidly
+            // inefficient or plainly incorrect.
+            let mut e: *mut Env = self as *mut Env;
+
+            while let Some(p) = (*e).parent {
+                e = (*e).parent
+                    .map(|e| &mut (*e.borrow_mut()) as *mut Env)
+                    .unwrap_or(::std::ptr::null_mut());
+            }
+            // `e` is now the top-level environment, i.e., the global env.
+            (*e).define_local(key, value);
         }
-        // `e` is now the top-level environment, i.e., the global env.
-        e.borrow_mut().define_local(key, value);
     }
 }
 
