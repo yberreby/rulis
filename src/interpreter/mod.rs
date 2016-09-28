@@ -8,7 +8,7 @@ pub struct Interpreter {
 
 impl Interpreter {
     pub fn new() -> Interpreter {
-        let mut env = Env::new();
+        let mut env = Env::empty();
         builtins::add_builtins(&mut env);
 
         Interpreter { env: env }
@@ -25,7 +25,7 @@ impl Interpreter {
     }
 }
 
-fn eval_sexpr(env: &mut Env, sexpr: &mut [Expr]) -> Result<Expr, String> {
+pub fn eval_sexpr(env: &mut Env, sexpr: &mut [Expr]) -> Result<Expr, String> {
     debug!("eval sexpr: {:?}", sexpr);
     if sexpr.len() == 0 {
         return Ok(Expr::SExpr(SExpr::empty()));
@@ -37,7 +37,7 @@ fn eval_sexpr(env: &mut Env, sexpr: &mut [Expr]) -> Result<Expr, String> {
 
     let (operator, arguments) = sexpr.split_at_mut(1);
 
-    if let Expr::Function(ref f) = operator[0] {
+    if let Expr::Function(ref mut f) = operator[0] {
         f.call(env, arguments)
     } else {
         Err(format!("first element should be function, but was {:?}",

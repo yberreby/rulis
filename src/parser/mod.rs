@@ -11,7 +11,8 @@ use num::ToPrimitive;
 
 pub fn parse(s: &str) -> Result<Expr, String> {
     let tokens = lexer::lex(s);
-    let mut parser = Parser::new(tokens.into_iter().map(|tas| tas.token));
+    let mut parser = try!(Parser::new(tokens.into_iter().map(|tas| tas.token))
+        .map_err(|e| e.kind.to_string()));
     parser.parse_expr().map_err(|e| e.kind.to_string())
 }
 
@@ -24,13 +25,23 @@ pub struct Parser<R: Iterator<Item = Token>> {
 }
 
 impl<R: Iterator<Item = Token>> Parser<R> {
-    pub fn new(mut it: R) -> Parser<R> {
-        // TODO: handle missing tok gracefully.
-        let first_tok = it.next().expect("missing first token");
-        Parser {
+    pub fn new(mut it: R) -> PResult<Parser<R>> {
+        let first_tok = try!(it.next().ok_or_else(|| {
+            Error {
+                kind: ErrorKind::UnexpectedToken {
+                    found: Token {
+                        value: None,
+                        kind: TKind::Eof,
+                    },
+                    expected: vec![],
+                },
+            }
+        }));
+
+        Ok(Parser {
             token: first_tok,
             reader: it.peekable(),
-        }
+        })
     }
 
     /// Advance the parser by one token.
