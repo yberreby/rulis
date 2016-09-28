@@ -34,11 +34,13 @@ fn test_runs<'a,
     }
 }
 
-
 #[test]
-fn invalid_code_is_rejected() {
-    let src = "(+ 5 ((* 2 428))";
-    assert!(eval(src).is_err());
+fn incorrect_code_is_rejected_and_doesnt_cause_panics() {
+    let sources = vec!["(def {a b c} {+ (* a c) b})", "(+ 5 ((* 2 428))"];
+
+    for src in &sources {
+        assert!(eval(src).is_err());
+    }
 }
 
 #[test]
