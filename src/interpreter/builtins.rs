@@ -160,6 +160,7 @@ fn builtin_lambda(env: &mut Env, arguments: &[Expr]) -> Result<Expr, String> {
 
     if let Expr::QExpr(params) = arguments[0].clone() {
         if let Expr::QExpr(body) = arguments[1].clone() {
+            println!("builtin_lambda env: {:#?}", env);
             // Note: we're _cloning_ the parent environment here, not keeping a reference to it.
             Ok(Expr::Function(Function::Lambda(try!(Lambda::new(params, body, Rc::new(RefCell::new(env.clone())))))))
         } else {

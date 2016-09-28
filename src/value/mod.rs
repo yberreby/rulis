@@ -22,6 +22,13 @@ impl Env {
         }
     }
 
+    pub fn with_parent(parent: Rc<RefCell<Env>>) -> Env {
+        Env {
+            own_map: HashMap::new(),
+            parent: Some(parent),
+        }
+    }
+
     pub fn get(&self, key: &str) -> Option<Expr> {
         self.own_map
             .get(key)
@@ -44,8 +51,8 @@ impl Env {
             // inefficient or plainly incorrect.
             let mut e: *mut Env = self as *mut Env;
 
+            println!("e: {:?}", *e);
             while let Some(ref mut p) = (*e).parent {
-                println!("{:?}", e);
                 e = p.borrow_mut()
                     .parent
                     .as_ref()
