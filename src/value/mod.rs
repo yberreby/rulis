@@ -45,6 +45,7 @@ impl Env {
             let mut e: *mut Env = self as *mut Env;
 
             while let Some(ref mut p) = (*e).parent {
+                println!("{:?}", e);
                 e = p.borrow_mut()
                     .parent
                     .as_ref()
@@ -72,7 +73,7 @@ pub struct Lambda {
 }
 
 impl Lambda {
-    pub fn new(parameters: QExpr, body: QExpr) -> Result<Lambda, String> {
+    pub fn new(parameters: QExpr, body: QExpr, parent: Rc<RefCell<Env>>) -> Result<Lambda, String> {
         let mut symbol_parameters = Vec::new();
 
         for param in parameters.exprs {
