@@ -1,8 +1,10 @@
 # rulis
 
 `rulis` is a tiny Lisp interpreter based on [Build Your Own
-Lisp](http://www.buildyourownlisp.com/)'s grammar. It comes with a very simple
-REPL that you can run with `cargo run`.
+Lisp](http://www.buildyourownlisp.com/), but  written in Rust, whereas BYOL's
+interpreter is written in C.
+
+Rulis comes with a very simple REPL that you can run with `cargo run`.
 
 ## License
 
