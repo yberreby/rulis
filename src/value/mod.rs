@@ -57,13 +57,17 @@ impl Env {
         // aliased. Only one mutable borrow to a part of `self`, apart from `self` itself, exists
         // at once in the form of the `e` raw pointer.
         unsafe {
+            // `e` cannot be null when it is first defined because `self` is guaranteed not to be
+            // null.
             let mut e = self as *mut Env;
 
             while let Some(ref mut p) = (*e).parent {
-                e = p.borrow_mut()
-                    .parent
-                    .as_ref()
-                    .map_or(::std::ptr::null_mut(), |e| e.as_ptr())
+                match p.borrow_mut().parent.as_ref() {
+                    Some(ref mut parent) => {
+                        e = parent.as_ptr();
+                    }
+                    None => break,
+                }
             }
             // `e` should now be the top-level environment (i.e. the global env).
             (*e).define_local(key, value);
