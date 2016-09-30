@@ -1,4 +1,4 @@
-use value::Expr;
+use value::{Expr, SExpr};
 use eval;
 use std::fmt::Debug;
 use Interpreter;
@@ -88,4 +88,18 @@ fn lambdas_work() {
     ];
 
     test_runs(runs.into_iter(), |x| x, |i| Ok(Expr::Integer(i)));
+}
+
+
+#[test]
+fn fun_segfault_1() {
+    let runs = vec![
+(r"
+(def {fun} (\ {args body} {def (head args) (\ (tail args) body)}))
+(fun {add a b} {+ a b})",
+                     Expr::SExpr(SExpr::empty())),
+
+    ];
+
+    test_runs(runs.into_iter(), |x| x, |x| Ok(x));
 }
