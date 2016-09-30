@@ -4,8 +4,15 @@ use value::{Expr, SExpr, QExpr, Env, Function, InnerFunc, Lambda};
 
 // TODO: clean up error handling in this module. It's a mess.
 
+/// Kind of variable declaration.
+enum DeclKind {
+    Global,
+    Local,
+}
+
 pub fn add_builtins(env: &mut Env) {
     add_builtin_fn(env, "def", builtin_def);
+    add_builtin_fn(env, "=", builtin_local_def);
     add_builtin_fn(env, "\\", builtin_lambda);
 
     add_builtin_fn(env, "list", builtin_list);
@@ -133,7 +140,7 @@ fn builtin_eval(env: &mut Env, arguments: &[Expr]) -> Result<Expr, String> {
     }
 }
 
-fn builtin_def(env: &mut Env, arguments: &[Expr]) -> Result<Expr, String> {
+fn var(env: &mut Env, arguments: &[Expr], decl_kind: DeclKind) -> Result<Expr, String> {
     if let Expr::QExpr(symbols) = arguments[0].clone() {
         let values = &arguments[1..];
         if symbols.len() != values.len() {
@@ -147,7 +154,10 @@ fn builtin_def(env: &mut Env, arguments: &[Expr]) -> Result<Expr, String> {
 
         for (i, maybe_symbol) in symbols.to_vec().into_iter().enumerate() {
             if let Expr::Symbol(s) = maybe_symbol {
-                env.define_global(s, values[i].clone());
+                match decl_kind {
+                    DeclKind::Global => env.define_global(s, values[i].clone()),
+                    DeclKind::Local => env.define_local(s, values[i].clone()),
+                }
             } else {
                 return Err(format!("expected symbol, found {:?}", maybe_symbol));
             }
@@ -159,6 +169,14 @@ fn builtin_def(env: &mut Env, arguments: &[Expr]) -> Result<Expr, String> {
         return Err(format!("expected Q-expression as first argument, found {:?}",
                            arguments[0]));
     }
+}
+
+fn builtin_def(env: &mut Env, arguments: &[Expr]) -> Result<Expr, String> {
+    var(env, arguments, DeclKind::Global)
+}
+
+fn builtin_local_def(env: &mut Env, arguments: &[Expr]) -> Result<Expr, String> {
+    var(env, arguments, DeclKind::Local)
 }
 
 
