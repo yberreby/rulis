@@ -105,26 +105,36 @@ impl Lambda {
     }
 
     pub fn call(&mut self, arguments: &[Expr]) -> Result<Expr, String> {
-        for (i, arg) in arguments.iter().enumerate() {
-            if i == self.parameters.len() {
-                // We've run out of parameters to which to bind arguments.
-                return Err(format!("too many arguments passed to lambda: found {}, expected at \
-                                    most {}",
-                                   arguments.len(),
-                                   self.parameters.len()));
-            }
+        let total_parameter_count = self.parameters.len();
+
+        if arguments.len() > self.parameters.len() {
+            return Err(format!("too many arguments passed to lambda: found {}, expected at most \
+                                {}",
+                               arguments.len(),
+                               self.parameters.len()));
+        }
+
+        // perf: we might want to store a reversed parameters Vec and remove elements from its end
+        // with `.pop()`.
+        for arg in arguments.iter() {
+            debug!("params: {:?}\nargs: {:?}", self.parameters, arguments);
+            let next_param = self.parameters.remove(0);
 
             // Populate our local environment with the arguments, which are named by the
             // corresponding parameter name.
-            self.local_env.define_local(self.parameters[i].clone(), arg.clone());
+            self.local_env.define_local(next_param, arg.clone());
         }
 
-
-        if arguments.len() == self.parameters.len() {
+        if arguments.len() == total_parameter_count {
             eval_sexpr(&mut self.local_env, &mut self.body)
         } else {
-            assert!(arguments.len() < self.parameters.len(),
-                    "argument count should not be lower than parameter count at this point");
+            assert!(arguments.len() < total_parameter_count,
+                    "argument count should not be greater than or equal to parameter count at \
+                     this point. Arguments: {:?}; remaining parameters: {:?}; total parameter \
+                     count: {}",
+                    arguments,
+                    self.parameters,
+                    total_parameter_count);
             // This clone will have all the partial parameters bound to it.
             Ok(Expr::Function(Function::Lambda(self.clone())))
         }
