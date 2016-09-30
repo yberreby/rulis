@@ -105,19 +105,49 @@ impl Lambda {
     }
 
     pub fn call(&mut self, arguments: &[Expr]) -> Result<Expr, String> {
-        for (i, arg) in arguments.iter().enumerate() {
-            // Populate our local environment with the arguments, which are named by the
-            // corresponding parameter name.
-            self.local_env.define_local(self.parameters[i].clone(), arg.clone());
+        let total_parameter_count = self.parameters.len();
+
+        if arguments.len() > self.parameters.len() {
+            return Err(format!("too many arguments passed to lambda: found {}, expected at most \
+                                {}",
+                               arguments.len(),
+                               self.parameters.len()));
         }
 
-        eval_sexpr(&mut self.local_env, &mut self.body)
+        // perf: we might want to store a reversed parameters Vec and remove elements from its end
+        // with `.pop()`.
+        for arg in arguments.iter() {
+            debug!("params: {:?}\nargs: {:?}", self.parameters, arguments);
+            let next_param = self.parameters.remove(0);
+
+            // Populate our local environment with the arguments, which are named by the
+            // corresponding parameter name.
+            self.local_env.define_local(next_param, arg.clone());
+        }
+
+        if arguments.len() == total_parameter_count {
+            eval_sexpr(&mut self.local_env, &mut self.body)
+        } else {
+            assert!(arguments.len() < total_parameter_count,
+                    "argument count should not be greater than or equal to parameter count at \
+                     this point. Arguments: {:?}; remaining parameters: {:?}; total parameter \
+                     count: {}",
+                    arguments,
+                    self.parameters,
+                    total_parameter_count);
+            // This clone will have all the partial parameters bound to it.
+            Ok(Expr::Function(Function::Lambda(self.clone())))
+        }
     }
 }
 
 impl fmt::Display for Lambda {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "(\\ {:?} {:?})", self.parameters, self.body)
+        write!(f,
+               "(\\ {:?} {:?}); local environment: {:?}",
+               self.parameters,
+               self.body,
+               self.local_env.own_map)
     }
 }
 

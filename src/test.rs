@@ -76,11 +76,16 @@ fn qexpressions_builtins_work() {
 
 #[test]
 fn lambdas_work() {
-    let runs = vec![(r"\
-(def {myFunc} (\ {a} {+ a 5}))
-(myFunc 10)
-",
-                     15)];
+    let runs = vec![
+(r"(def {myFunc} (\ {a} {+ a 5}))
+(myFunc 10)",
+                     15),
+(r"(def {add} (\ {a b} {+ a b}))
+(def {add5} (add 5))
+(add5 11)
+", 16),
+
+    ];
 
     test_runs(runs.into_iter(), |x| x, |i| Ok(Expr::Integer(i)));
 }
