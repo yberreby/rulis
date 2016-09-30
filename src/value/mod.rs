@@ -44,8 +44,6 @@ impl Env {
         self.own_map.insert(key.into(), value);
     }
 
-    // BEWARE: there be unsafe code!
-    // XXX: needs _thorough_ testing and review.
     pub fn define_global<K: Into<String>>(&mut self, key: K, value: Expr) {
         // I couldn't find a way to way this work in safe code that wasn't stupidly
         // inefficient and / or plainly incorrect. Improvements welcome!
