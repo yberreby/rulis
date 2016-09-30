@@ -45,21 +45,27 @@ impl Env {
     }
 
     // BEWARE: there be unsafe code!
-    // XXX: needs _thorough_ testing
+    // XXX: needs _thorough_ testing and review.
     pub fn define_global<K: Into<String>>(&mut self, key: K, value: Expr) {
+        // I couldn't find a way to way this work in safe code that wasn't stupidly
+        // inefficient and / or plainly incorrect. Improvements welcome!
+        //
+        // My knowledge of unsafe Rust being limited, the following note represents my
+        // understanding of the situation, but may be incorrect.
+        //
+        // SAFETY: this function mutably borrows `self`, therefore `self` is guaranteed not be
+        // aliased. Only one mutable borrow to a part of `self`, apart from `self` itself, exists
+        // at once in the form of the `e` raw pointer.
         unsafe {
-            // I couldn't find a way to way this work in safe code that wasn't either stupidly
-            // inefficient or plainly incorrect.
-            let mut e: *mut Env = self as *mut Env;
+            let mut e = self as *mut Env;
 
             while let Some(ref mut p) = (*e).parent {
                 e = p.borrow_mut()
                     .parent
                     .as_ref()
-                    .map(|e| &mut (*e.borrow_mut()) as *mut Env)
-                    .unwrap_or(::std::ptr::null_mut());
+                    .map_or(::std::ptr::null_mut(), |e| e.as_ptr())
             }
-            // `e` is now the top-level environment, i.e., the global env.
+            // `e` should now be the top-level environment (i.e. the global env).
             (*e).define_local(key, value);
         }
     }
