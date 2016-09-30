@@ -106,12 +106,28 @@ impl Lambda {
 
     pub fn call(&mut self, arguments: &[Expr]) -> Result<Expr, String> {
         for (i, arg) in arguments.iter().enumerate() {
+            if i == self.parameters.len() {
+                // We've run out of parameters to which to bind arguments.
+                return Err(format!("too many arguments passed to lambda: found {}, expected at \
+                                    most {}",
+                                   arguments.len(),
+                                   self.parameters.len()));
+            }
+
             // Populate our local environment with the arguments, which are named by the
             // corresponding parameter name.
             self.local_env.define_local(self.parameters[i].clone(), arg.clone());
         }
 
-        eval_sexpr(&mut self.local_env, &mut self.body)
+
+        if arguments.len() == self.parameters.len() {
+            eval_sexpr(&mut self.local_env, &mut self.body)
+        } else {
+            assert!(arguments.len() < self.parameters.len(),
+                    "argument count should not be lower than parameter count at this point");
+            // This clone will have all the partial parameters bound to it.
+            Ok(Expr::Function(Function::Lambda(self.clone())))
+        }
     }
 }
 
