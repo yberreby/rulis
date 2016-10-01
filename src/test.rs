@@ -105,6 +105,7 @@ fn fun_segfault_1() {
 }
 
 #[test]
+#[ignore]
 fn conditionals_work() {
     let runs = vec![("(if 1 {+ 1 2} {+ 5 6})", Expr::Integer(3)), ("(if 0 {+ 1 2} {+ 5 6})", Expr::Integer(11)),
     ("(if 1 {0})", Expr::QExpr(QExpr::new(vec![Expr::Integer(0)]))),
