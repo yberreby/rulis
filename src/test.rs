@@ -36,7 +36,7 @@ fn test_runs<'a,
 
 #[test]
 fn incorrect_code_is_rejected_and_doesnt_cause_panics() {
-    let sources = vec!["(def {a b c} {+ (* a c) b})", "(+ 5 ((* 2 428))"];
+    let sources = vec!["(def {a b c} {+ (* a c) b})", "(+ 5 ((* 2 428))", "(+ 5 {})"];
 
     for src in &sources {
         assert!(eval(src).is_err());
