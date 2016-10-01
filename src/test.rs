@@ -1,4 +1,4 @@
-use value::{Expr, SExpr};
+use value::{Expr, SExpr, QExpr};
 use eval;
 use std::fmt::Debug;
 use Interpreter;
@@ -106,7 +106,9 @@ fn fun_segfault_1() {
 
 #[test]
 fn conditionals_work() {
-    let runs = vec![("(if 1 {+ 1 2} {+ 5 6})", 3), ("(if 0 {+ 1 2} {+ 5 6})", 11)];
+    let runs = vec![("(if 1 {+ 1 2} {+ 5 6})", Expr::Integer(3)), ("(if 0 {+ 1 2} {+ 5 6})", Expr::Integer(11)),
+    ("(if 1 {{a}})", Expr::QExpr(QExpr::new(vec![Expr::Symbol("a".into())]))),
+    ];
 
-    test_runs(runs.into_iter(), |x| x, |i| Ok(Expr::Integer(i)));
+    test_runs(runs.into_iter(), |x| x, |x| Ok(x));
 }
