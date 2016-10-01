@@ -1,6 +1,7 @@
 use std::rc::Rc;
 use std::cell::RefCell;
 use value::{Expr, SExpr, QExpr, Env, Function, InnerFunc, Lambda};
+use super::eval_sexpr;
 
 // TODO: clean up error handling in this module. It's a mess.
 
@@ -25,6 +26,8 @@ pub fn add_builtins(env: &mut Env) {
     add_builtin_fn(env, "-", builtin_sub);
     add_builtin_fn(env, "*", builtin_mul);
     add_builtin_fn(env, "/", builtin_div);
+
+    add_builtin_fn(env, "if", builtin_if);
 }
 
 fn add_builtin_fn<S: Into<String>>(env: &mut Env, name: S, f: InnerFunc) {
@@ -134,7 +137,7 @@ fn builtin_eval(env: &mut Env, arguments: &[Expr]) -> Result<Expr, String> {
 
     if let Expr::QExpr(mut qexpr) = arguments[0].clone() {
         debug!("eval qexpr: {}", qexpr);
-        super::eval_sexpr(env, &mut qexpr)
+        eval_sexpr(env, &mut qexpr)
     } else {
         return Err("type error, expected Q-Expression".into());
     }
@@ -196,6 +199,46 @@ fn builtin_lambda(env: &mut Env, arguments: &[Expr]) -> Result<Expr, String> {
         }
     } else {
         return Err(format!("expected Q-expression as first argument, found {:?}",
+                           arguments[0]));
+    }
+}
+
+fn builtin_if(env: &mut Env, arguments: &[Expr]) -> Result<Expr, String> {
+    if arguments.len() > 3 {
+        return Err(format!("expected at most 3 arguments, got {}", arguments.len()));
+    }
+
+
+    if let Expr::Integer(test) = arguments[0].clone() {
+        let mut then_expr: QExpr = match arguments[1].clone() {
+            Expr::QExpr(q) => q,
+            found => {
+                return Err(format!("expected Q-expression as second argument, found {:?}",
+                                   found))
+            }
+        };
+
+        let mut else_expr_opt: Option<QExpr> = match arguments.get(1).cloned() {
+            Some(Expr::QExpr(q)) => Some(q),
+            Some(found) => {
+                return Err(format!("expected Q-expression as second argument, found {:?}",
+                                   found))
+            }
+            _ => None,
+        };
+
+        if test == 1 {
+            eval_sexpr(env, &mut then_expr)
+        } else {
+            if let Some(ref mut q) = else_expr_opt {
+                eval_sexpr(env, q)
+            } else {
+                // If no else expression was supplied and the condition is not true, we do nothing.
+                Ok(Expr::SExpr(SExpr::empty()))
+            }
+        }
+    } else {
+        return Err(format!("expected integer as first argument, found {:?}",
                            arguments[0]));
     }
 }
