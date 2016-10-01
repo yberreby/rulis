@@ -52,8 +52,13 @@ fn add_builtin(env: &mut Env, name: String, value: Expr) {
 
 
 pub fn arithmetic_operation(operator: &str, arguments: &[Expr]) -> Result<Expr, String> {
-    let mut numeric_arguments = arguments.iter().map(|e| e.as_i64().unwrap());
-    let first_argument = numeric_arguments.next().unwrap();
+    let numeric_arguments_res: Result<Vec<i64>, String> = arguments.iter()
+        .map(|e| e.as_i64().ok_or_else(|| "arguments should all be numbers".into()))
+        .collect();
+    let mut numeric_arguments = try!(numeric_arguments_res).into_iter();
+
+    let first_argument: i64 = try!(numeric_arguments.next()
+        .ok_or_else(|| "missing first argument".to_string()));
     let mut result = first_argument;
 
     if operator == "-" && arguments.len() == 1 {
