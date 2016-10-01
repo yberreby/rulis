@@ -112,3 +112,19 @@ fn conditionals_work() {
 
     test_runs(runs.into_iter(), |x| x, |x| Ok(x));
 }
+
+#[test]
+fn comparison_operators_work() {
+    let runs = vec![
+        ("(<= 5 7)", 1),
+        ("(>= 5 7)", 0),
+        ("(<= 8 8)", 1),
+        ("(>= 8 8)", 1),
+        ("(< 5 7)", 1),
+        ("(< 7 5)", 0),
+        ("(> 5 7)", 0),
+        ("(> 7 5)", 1),
+    ];
+
+    test_runs(runs.into_iter(), |x| x, |x| Ok(Expr::Integer(x)));
+}
