@@ -283,7 +283,7 @@ fn builtin_greater_than_or_equal(env: &mut Env, arguments: &[Expr]) -> Result<Ex
 
 
 // TODO: use bool instead of i64.
-fn ord(env: &mut Env, arguments: &[Expr], cmp_kind: CmpKind) -> Result<Expr, String> {
+fn ord(_env: &mut Env, arguments: &[Expr], cmp_kind: CmpKind) -> Result<Expr, String> {
     let a = match arguments[0].clone() {
         Expr::Integer(x) => x,
         other => return Err(format!("expected integer as first argument, found {:?}", other)),
