@@ -11,6 +11,14 @@ enum DeclKind {
     Local,
 }
 
+/// Kind of comparison.
+enum CmpKind {
+    LessThan,
+    LessThanOrEqual,
+    GreaterThan,
+    GreaterThanOrEqual,
+}
+
 pub fn add_builtins(env: &mut Env) {
     add_builtin_fn(env, "def", builtin_def);
     add_builtin_fn(env, "=", builtin_local_def);
@@ -28,6 +36,10 @@ pub fn add_builtins(env: &mut Env) {
     add_builtin_fn(env, "/", builtin_div);
 
     add_builtin_fn(env, "if", builtin_if);
+    add_builtin_fn(env, ">", builtin_greater_than);
+    add_builtin_fn(env, "<", builtin_less_than);
+    add_builtin_fn(env, ">=", builtin_greater_than_or_equal);
+    add_builtin_fn(env, "<=", builtin_lessr_than_or_equal);
 }
 
 fn add_builtin_fn<S: Into<String>>(env: &mut Env, name: S, f: InnerFunc) {
@@ -249,4 +261,45 @@ fn builtin_if(env: &mut Env, arguments: &[Expr]) -> Result<Expr, String> {
         return Err(format!("expected integer as first argument, found {:?}",
                            arguments[0]));
     }
+}
+
+
+fn builtin_less_than(env: &mut Env, arguments: &[Expr]) -> Result<Expr, String> {
+    ord(env, arguments, CmpKind::LessThan)
+}
+
+fn builtin_lessr_than_or_equal(env: &mut Env, arguments: &[Expr]) -> Result<Expr, String> {
+    ord(env, arguments, CmpKind::LessThanOrEqual)
+}
+
+
+fn builtin_greater_than(env: &mut Env, arguments: &[Expr]) -> Result<Expr, String> {
+    ord(env, arguments, CmpKind::GreaterThan)
+}
+
+fn builtin_greater_than_or_equal(env: &mut Env, arguments: &[Expr]) -> Result<Expr, String> {
+    ord(env, arguments, CmpKind::GreaterThanOrEqual)
+}
+
+
+// TODO: use bool instead of i64.
+fn ord(env: &mut Env, arguments: &[Expr], cmp_kind: CmpKind) -> Result<Expr, String> {
+    let a = match arguments[0].clone() {
+        Expr::Integer(x) => x,
+        other => return Err(format!("expected integer as first argument, found {:?}", other)),
+    };
+
+    let b = match arguments[0].clone() {
+        Expr::Integer(x) => x,
+        other => return Err(format!("expected integer as first argument, found {:?}", other)),
+    };
+
+    let res = match cmp_kind {
+        CmpKind::LessThan => a < b,
+        CmpKind::LessThanOrEqual => a <= b,
+        CmpKind::GreaterThan => a > b,
+        CmpKind::GreaterThanOrEqual => a >= b,
+    };
+
+    Ok(Expr::Integer(res as i64))
 }
