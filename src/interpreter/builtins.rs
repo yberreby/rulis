@@ -39,7 +39,7 @@ pub fn add_builtins(env: &mut Env) {
     add_builtin_fn(env, ">", builtin_greater_than);
     add_builtin_fn(env, "<", builtin_less_than);
     add_builtin_fn(env, ">=", builtin_greater_than_or_equal);
-    add_builtin_fn(env, "<=", builtin_lessr_than_or_equal);
+    add_builtin_fn(env, "<=", builtin_lesser_than_or_equal);
 }
 
 fn add_builtin_fn<S: Into<String>>(env: &mut Env, name: S, f: InnerFunc) {
@@ -268,7 +268,7 @@ fn builtin_less_than(env: &mut Env, arguments: &[Expr]) -> Result<Expr, String> 
     ord(env, arguments, CmpKind::LessThan)
 }
 
-fn builtin_lessr_than_or_equal(env: &mut Env, arguments: &[Expr]) -> Result<Expr, String> {
+fn builtin_lesser_than_or_equal(env: &mut Env, arguments: &[Expr]) -> Result<Expr, String> {
     ord(env, arguments, CmpKind::LessThanOrEqual)
 }
 
@@ -289,7 +289,7 @@ fn ord(env: &mut Env, arguments: &[Expr], cmp_kind: CmpKind) -> Result<Expr, Str
         other => return Err(format!("expected integer as first argument, found {:?}", other)),
     };
 
-    let b = match arguments[0].clone() {
+    let b = match arguments[1].clone() {
         Expr::Integer(x) => x,
         other => return Err(format!("expected integer as first argument, found {:?}", other)),
     };
