@@ -103,3 +103,10 @@ fn fun_segfault_1() {
 
     test_runs(runs.into_iter(), |x| x, |x| Ok(x));
 }
+
+#[test]
+fn conditionals_work() {
+    let runs = vec![("(if 1 {+ 1 2} {+ 5 6})", 3), ("(if 0 {+ 1 2} {+ 5 6})", 11)];
+
+    test_runs(runs.into_iter(), |x| x, |i| Ok(Expr::Integer(i)));
+}
