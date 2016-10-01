@@ -232,7 +232,7 @@ fn builtin_if(env: &mut Env, arguments: &[Expr]) -> Result<Expr, String> {
         println!("then_expr: {:?}", then_expr);
         println!("else_expr_opt: {:?}", else_expr_opt);
 
-        if test == 1 {
+        if test != 0 {
             println!("eval then_expr");
             eval_sexpr(env, &mut then_expr)
         } else {
