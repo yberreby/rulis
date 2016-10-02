@@ -38,6 +38,8 @@ pub fn add_builtins(env: EnvPtr) {
     add_builtin_fn(env.clone(), "<", builtin_less_than);
     add_builtin_fn(env.clone(), ">=", builtin_greater_than_or_equal);
     add_builtin_fn(env.clone(), "<=", builtin_lesser_than_or_equal);
+    add_builtin_fn(env.clone(), "==", builtin_is_eq);
+    add_builtin_fn(env.clone(), "!=", builtin_is_not_eq);
 }
 
 fn add_builtin_fn<S: Into<String>>(env: EnvPtr, name: S, f: InnerFunc) {
@@ -275,7 +277,6 @@ fn builtin_lesser_than_or_equal(env: EnvPtr, arguments: &[Expr]) -> Result<Expr,
     ord(env, arguments, CmpKind::LessThanOrEqual)
 }
 
-
 fn builtin_greater_than(env: EnvPtr, arguments: &[Expr]) -> Result<Expr, String> {
     ord(env, arguments, CmpKind::GreaterThan)
 }
@@ -284,6 +285,15 @@ fn builtin_greater_than_or_equal(env: EnvPtr, arguments: &[Expr]) -> Result<Expr
     ord(env, arguments, CmpKind::GreaterThanOrEqual)
 }
 
+fn builtin_is_eq(_env: EnvPtr, arguments: &[Expr]) -> Result<Expr, String> {
+    let b = arguments[0] == arguments[1];
+    Ok(Expr::Integer(b as i64))
+}
+
+fn builtin_is_not_eq(_env: EnvPtr, arguments: &[Expr]) -> Result<Expr, String> {
+    let b = arguments[0] != arguments[1];
+    Ok(Expr::Integer(b as i64))
+}
 
 // TODO: use bool instead of i64.
 fn ord(_env: EnvPtr, arguments: &[Expr], cmp_kind: CmpKind) -> Result<Expr, String> {

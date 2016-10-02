@@ -3,10 +3,10 @@ mod qexpr;
 pub use self::sexpr::*;
 pub use self::qexpr::*;
 use std::fmt;
-use std::collections::HashMap;
-use interpreter::eval_sexpr;
 use std::rc::Rc;
 use std::cell::RefCell;
+use std::collections::HashMap;
+use interpreter::eval_sexpr;
 
 pub type EnvPtr = Rc<RefCell<Env>>;
 
