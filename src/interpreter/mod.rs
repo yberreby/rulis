@@ -10,7 +10,7 @@ pub struct Interpreter {
 
 impl Interpreter {
     pub fn new() -> Interpreter {
-        let mut env_ptr = Rc::new(RefCell::new(Env::empty()));
+        let env_ptr = Rc::new(RefCell::new(Env::empty()));
         builtins::add_builtins(env_ptr.clone());
 
         Interpreter { global_env_ptr: env_ptr }

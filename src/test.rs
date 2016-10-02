@@ -1,4 +1,4 @@
-use value::{Expr, SExpr, QExpr};
+use value::{Expr, QExpr};
 use eval;
 use std::fmt::Debug;
 use Interpreter;

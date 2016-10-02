@@ -1,6 +1,4 @@
-use std::rc::Rc;
-use std::cell::RefCell;
-use value::{Expr, SExpr, QExpr, Env, EnvPtr, Function, InnerFunc, Lambda};
+use value::{Expr, SExpr, QExpr, EnvPtr, Function, InnerFunc, Lambda};
 use super::eval_sexpr;
 
 // TODO: clean up error handling in this module. It's a mess.

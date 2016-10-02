@@ -48,10 +48,6 @@ impl Env {
 
     pub fn define_global<K: Into<String>>(&mut self, key: K, value: Expr) {
         let key = key.into();
-        println!("define_global key: {:?}, value: {:#?}, self: {:#?}",
-                 key,
-                 value,
-                 self);
         // I couldn't find a way to way this work in safe code that wasn't stupidly
         // inefficient and / or plainly incorrect. Improvements welcome!
         //
@@ -65,23 +61,13 @@ impl Env {
             // `e` cannot be null when it is first defined because `self` is guaranteed not to be
             // null.
             let mut e = self as *mut Env;
-            println!("e: {:p}", e);
-            println!("parent: {:#?}", (*e).parent);
 
             while let Some(ref mut parent) = (*e).parent {
-                println!("inside while");
-                println!("e before as_ptr: {:p}", e);
                 e = (**parent).as_ptr();
-                println!("e after as_ptr: {:p}", e);
             }
             // `e` should now be the top-level environment (i.e. the global env).
             (*e).define_local(key, value);
-
-            println!("e: {:p}", e);
         }
-
-
-        println!("end of define_global self: {:#?}", self);
     }
 }
 
