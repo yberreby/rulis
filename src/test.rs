@@ -152,3 +152,14 @@ fn negative_num_literals_work() {
 
     test_runs(runs.into_iter(), |x| x, |x| Ok(Expr::Integer(x)));
 }
+
+#[test]
+fn recursion_works() {
+    let runs = vec![
+        (r"(def {fun} (\ {args body} {def (head args) (\ (tail args) body)}))
+(fun {len l} {if (== l {}) {0} {+ 1 (len (tail l))} })
+(len {a 5 6 {}})", 4),
+    ];
+
+    test_runs(runs.into_iter(), |x| x, |x| Ok(Expr::Integer(x)));
+}
