@@ -244,18 +244,10 @@ fn builtin_if(env: EnvPtr, arguments: &[Expr]) -> Result<Expr, String> {
             _ => None,
         };
 
-        println!("test: {}", test);
-        println!("arguments: {:?}", arguments);
-        println!("then_expr: {:?}", then_expr);
-        println!("else_expr_opt: {:?}", else_expr_opt);
-
         if test != 0 {
-            println!("eval then_expr");
             eval_sexpr(env, &mut then_expr)
         } else {
-            println!("entered else");
             if let Some(ref mut q) = else_expr_opt {
-                println!("eval else_expr_opt inner: {:?}", q);
                 eval_sexpr(env, q)
             } else {
                 // If no else expression was supplied and the condition is not true, we do nothing.
