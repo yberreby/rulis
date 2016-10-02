@@ -45,6 +45,11 @@ impl Env {
     }
 
     pub fn define_global<K: Into<String>>(&mut self, key: K, value: Expr) {
+        let key = key.into();
+        println!("define_global key: {:?}, value: {:#?}, self: {:#?}",
+                 key,
+                 value,
+                 self);
         // I couldn't find a way to way this work in safe code that wasn't stupidly
         // inefficient and / or plainly incorrect. Improvements welcome!
         //
@@ -70,6 +75,9 @@ impl Env {
             // `e` should now be the top-level environment (i.e. the global env).
             (*e).define_local(key, value);
         }
+
+
+        println!("end of define_global self: {:#?}", self);
     }
 }
 

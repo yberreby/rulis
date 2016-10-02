@@ -38,6 +38,7 @@ pub fn eval_sexpr(env: &mut Env, sexpr: &mut [Expr]) -> Result<Expr, String> {
     let (operator, arguments) = sexpr.split_at_mut(1);
 
     if let Expr::Function(ref mut f) = operator[0] {
+        // println!("calling with env: {:#?}", env);
         f.call(env, arguments)
     } else {
         Err(format!("first element should be function, but was {:?}",
