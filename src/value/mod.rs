@@ -157,8 +157,13 @@ impl Lambda {
 
 impl fmt::Display for Lambda {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "(\\ {:?} {:?});", self.parameters, self.body)
-        // self.local_env_ptr.borrow().own_map)
+        unsafe {
+            write!(f,
+                   "(\\ {:?} {:?}); own_map: {:?}",
+                   self.parameters,
+                   self.body,
+                   (*self.local_env_ptr.as_ptr()).own_map)
+        }
     }
 }
 
