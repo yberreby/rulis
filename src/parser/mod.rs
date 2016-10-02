@@ -151,7 +151,6 @@ impl<R: Iterator<Item = Token>> Parser<R> {
         // octal_lit   = "0" { octal_digit } .
         // hex_lit     = "0" ( "x" | "X" ) hex_digit { hex_digit } .
 
-
         match self.token.kind {
             TKind::DecimalLit => {
                 let value = self.bump_and_get().value.expect("BUG: missing value in decimal lit");
@@ -184,8 +183,15 @@ impl<R: Iterator<Item = Token>> Parser<R> {
     /// parse an octal or hex literal, do not pass the `0` or `0x` prefixes.
     fn interpret_int(&mut self, lit: &str, base: u32, token_name: &str) -> PResult<BigInt> {
         let mut res = BigInt::from(0u8);
+        let mut chars = lit.chars();
+        let mut negative = false;
 
-        for c in lit.chars() {
+        if lit.chars().next() == Some('-') {
+            negative = true;
+            chars.next().unwrap();
+        }
+
+        for c in chars {
             if let Some(d) = c.to_digit(base) {
                 res = res * BigInt::from(base);
                 res = res + BigInt::from(d);
@@ -193,6 +199,10 @@ impl<R: Iterator<Item = Token>> Parser<R> {
                 let msg = format!("invalid character in {}: {}", token_name, c);
                 return Err(self.err(ErrorKind::other(msg)));
             }
+        }
+
+        if negative {
+            res = -res;
         }
 
         Ok(res)

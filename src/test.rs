@@ -141,3 +141,14 @@ fn comparison_operators_work() {
 
     test_runs(runs.into_iter(), |x| x, |x| Ok(Expr::Integer(x)));
 }
+
+#[test]
+fn negative_num_literals_work() {
+    let runs = vec![
+        ("-65", -65),
+        ("(- -65)", 65),
+        ("(< -8 8)", 1),
+    ];
+
+    test_runs(runs.into_iter(), |x| x, |x| Ok(Expr::Integer(x)));
+}

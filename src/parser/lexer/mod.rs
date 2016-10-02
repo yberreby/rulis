@@ -74,6 +74,10 @@ impl<'src> Lexer<'src> {
         // hex_lit     = "0" ( "x" | "X" ) hex_digit { hex_digit } .
 
         let start = self.byte_offset;
+        let negative = self.current_char == Some('-');
+        if negative {
+            self.bump();
+        }
 
         // If we have a hexadecimal, treat it specially.
         if self.current_char == Some('0') &&
@@ -225,6 +229,14 @@ impl<'src> Lexer<'src> {
                 TKind::RBrace
             }
             // Scan integer.
+            '-' => {
+                if self.next_char().map(|c| c.is_digit(10)) == Some(true) {
+                    return Some(self.scan_number());
+                } else {
+                    return Some(self.scan_symbol());
+                }
+            }
+            // XXX: is_digit(10) is only for decimal numbers (no hex, etc).
             c if c.is_digit(10) => return Some(self.scan_number()),
             c if can_start_identifier(c) => return Some(self.scan_symbol()),
             // Start of _interpreted_ string literal.
@@ -297,13 +309,13 @@ fn is_allowed_symbol(c: char) -> bool {
 }
 
 fn can_start_identifier(c: char) -> bool {
-    is_allowed_symbol(c) || c.is_alphabetic()
+    c != '-' && (is_allowed_symbol(c) || c.is_alphabetic())
 }
 
 fn can_continue_identifier(c: char) -> bool {
     is_allowed_symbol(c) || c.is_alphabetic() || c.is_numeric()
 }
 
-fn char_at(s: &str, byte: usize) -> char {
+pub fn char_at(s: &str, byte: usize) -> char {
     s[byte..].chars().next().unwrap()
 }
