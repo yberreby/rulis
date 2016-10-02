@@ -1,17 +1,19 @@
 mod builtins;
-use value::{Expr, SExpr, Env};
+use value::{Expr, SExpr, Env, EnvPtr};
+use std::rc::Rc;
+use std::cell::RefCell;
 
 pub struct Interpreter {
     /// The environment maps defined symbols to values.
-    env: Env,
+    global_env_ptr: EnvPtr,
 }
 
 impl Interpreter {
     pub fn new() -> Interpreter {
-        let mut env = Env::empty();
-        builtins::add_builtins(&mut env);
+        let mut env_ptr = Rc::new(RefCell::new(Env::empty()));
+        builtins::add_builtins(env_ptr.clone());
 
-        Interpreter { env: env }
+        Interpreter { global_env_ptr: env_ptr }
     }
 
     pub fn evaluate(&mut self, s: &str) -> Result<Expr, String> {
@@ -21,25 +23,24 @@ impl Interpreter {
 
 
     pub fn evaluate_expression(&mut self, expr: &mut Expr) -> Result<Expr, String> {
-        eval_expr(&mut self.env, expr)
+        eval_expr(self.global_env_ptr.clone(), expr)
     }
 }
 
-pub fn eval_sexpr(env: &mut Env, sexpr: &mut [Expr]) -> Result<Expr, String> {
+pub fn eval_sexpr(env_ptr: EnvPtr, sexpr: &mut [Expr]) -> Result<Expr, String> {
     debug!("eval sexpr: {:?}", sexpr);
     if sexpr.len() == 0 {
         return Ok(Expr::SExpr(SExpr::empty()));
     }
 
     for operand in sexpr.iter_mut() {
-        *operand = try!(eval_expr(env, operand));
+        *operand = try!(eval_expr(env_ptr.clone(), operand));
     }
 
     let (operator, arguments) = sexpr.split_at_mut(1);
 
     if let Expr::Function(ref mut f) = operator[0] {
-        // println!("calling with env: {:#?}", env);
-        f.call(env, arguments)
+        f.call(env_ptr.clone(), arguments)
     } else {
         Err(format!("first element should be function, but was {:?}",
                     operator[0]))
@@ -47,18 +48,18 @@ pub fn eval_sexpr(env: &mut Env, sexpr: &mut [Expr]) -> Result<Expr, String> {
 }
 
 
-fn eval_expr(env: &mut Env, expr: &mut Expr) -> Result<Expr, String> {
+fn eval_expr(env_ptr: EnvPtr, expr: &mut Expr) -> Result<Expr, String> {
     match *expr {
         Expr::Integer(_) |
         Expr::QExpr(_) |
         Expr::Function(_) => Ok(expr.clone()),
 
-        // TODO: implement name resolution (identifiers).
         Expr::Symbol(ref symbol) => {
-            let val = try!(env.get(&*symbol)
+            let val = try!(env_ptr.borrow()
+                .get(&*symbol)
                 .ok_or_else(|| format!("undefined symbol: {}", symbol)));
             Ok(val.clone())
         }
-        Expr::SExpr(ref mut sexpr) => eval_sexpr(env, &mut sexpr.exprs),
+        Expr::SExpr(ref mut sexpr) => eval_sexpr(env_ptr.clone(), &mut sexpr.exprs),
     }
 }

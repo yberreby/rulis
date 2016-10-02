@@ -1,6 +1,6 @@
 use std::rc::Rc;
 use std::cell::RefCell;
-use value::{Expr, SExpr, QExpr, Env, Function, InnerFunc, Lambda};
+use value::{Expr, SExpr, QExpr, Env, EnvPtr, Function, InnerFunc, Lambda};
 use super::eval_sexpr;
 
 // TODO: clean up error handling in this module. It's a mess.
@@ -19,35 +19,35 @@ enum CmpKind {
     GreaterThanOrEqual,
 }
 
-pub fn add_builtins(env: &mut Env) {
-    add_builtin_fn(env, "def", builtin_def);
-    add_builtin_fn(env, "=", builtin_local_def);
-    add_builtin_fn(env, "\\", builtin_lambda);
+pub fn add_builtins(env: EnvPtr) {
+    add_builtin_fn(env.clone(), "def", builtin_def);
+    add_builtin_fn(env.clone(), "=", builtin_local_def);
+    add_builtin_fn(env.clone(), "\\", builtin_lambda);
 
-    add_builtin_fn(env, "list", builtin_list);
-    add_builtin_fn(env, "head", builtin_head);
-    add_builtin_fn(env, "tail", builtin_tail);
-    add_builtin_fn(env, "eval", builtin_eval);
-    add_builtin_fn(env, "join", builtin_join);
+    add_builtin_fn(env.clone(), "list", builtin_list);
+    add_builtin_fn(env.clone(), "head", builtin_head);
+    add_builtin_fn(env.clone(), "tail", builtin_tail);
+    add_builtin_fn(env.clone(), "eval", builtin_eval);
+    add_builtin_fn(env.clone(), "join", builtin_join);
 
-    add_builtin_fn(env, "+", builtin_add);
-    add_builtin_fn(env, "-", builtin_sub);
-    add_builtin_fn(env, "*", builtin_mul);
-    add_builtin_fn(env, "/", builtin_div);
+    add_builtin_fn(env.clone(), "+", builtin_add);
+    add_builtin_fn(env.clone(), "-", builtin_sub);
+    add_builtin_fn(env.clone(), "*", builtin_mul);
+    add_builtin_fn(env.clone(), "/", builtin_div);
 
-    add_builtin_fn(env, "if", builtin_if);
-    add_builtin_fn(env, ">", builtin_greater_than);
-    add_builtin_fn(env, "<", builtin_less_than);
-    add_builtin_fn(env, ">=", builtin_greater_than_or_equal);
-    add_builtin_fn(env, "<=", builtin_lesser_than_or_equal);
+    add_builtin_fn(env.clone(), "if", builtin_if);
+    add_builtin_fn(env.clone(), ">", builtin_greater_than);
+    add_builtin_fn(env.clone(), "<", builtin_less_than);
+    add_builtin_fn(env.clone(), ">=", builtin_greater_than_or_equal);
+    add_builtin_fn(env.clone(), "<=", builtin_lesser_than_or_equal);
 }
 
-fn add_builtin_fn<S: Into<String>>(env: &mut Env, name: S, f: InnerFunc) {
+fn add_builtin_fn<S: Into<String>>(env: EnvPtr, name: S, f: InnerFunc) {
     add_builtin(env, name.into(), Expr::Function(Function::from_builtin(f)));
 }
 
-fn add_builtin(env: &mut Env, name: String, value: Expr) {
-    env.define_local(name, value);
+fn add_builtin(env: EnvPtr, name: String, value: Expr) {
+    env.borrow_mut().define_local(name, value);
 }
 
 
@@ -83,29 +83,29 @@ pub fn arithmetic_operation(operator: &str, arguments: &[Expr]) -> Result<Expr, 
     Ok(Expr::Integer(result))
 }
 
-fn builtin_add(_env: &mut Env, arguments: &[Expr]) -> Result<Expr, String> {
+fn builtin_add(_env: EnvPtr, arguments: &[Expr]) -> Result<Expr, String> {
     arithmetic_operation("+", arguments)
 }
 
-fn builtin_sub(_env: &mut Env, arguments: &[Expr]) -> Result<Expr, String> {
+fn builtin_sub(_env: EnvPtr, arguments: &[Expr]) -> Result<Expr, String> {
     arithmetic_operation("-", arguments)
 }
 
-fn builtin_mul(_env: &mut Env, arguments: &[Expr]) -> Result<Expr, String> {
+fn builtin_mul(_env: EnvPtr, arguments: &[Expr]) -> Result<Expr, String> {
     arithmetic_operation("*", arguments)
 }
 
-fn builtin_div(_env: &mut Env, arguments: &[Expr]) -> Result<Expr, String> {
+fn builtin_div(_env: EnvPtr, arguments: &[Expr]) -> Result<Expr, String> {
     arithmetic_operation("/", arguments)
 }
 
 
-fn builtin_list(_env: &mut Env, arguments: &[Expr]) -> Result<Expr, String> {
+fn builtin_list(_env: EnvPtr, arguments: &[Expr]) -> Result<Expr, String> {
     Ok(Expr::QExpr(QExpr::new(arguments.into())))
 }
 
 /// head returns a QExpr containing one element, the first element of the qexpr it was passed.
-fn builtin_head(_env: &mut Env, arguments: &[Expr]) -> Result<Expr, String> {
+fn builtin_head(_env: EnvPtr, arguments: &[Expr]) -> Result<Expr, String> {
     if arguments.len() > 1 {
         return Err("too many arguments".into());
     }
@@ -118,7 +118,7 @@ fn builtin_head(_env: &mut Env, arguments: &[Expr]) -> Result<Expr, String> {
     }
 }
 
-fn builtin_tail(_env: &mut Env, arguments: &[Expr]) -> Result<Expr, String> {
+fn builtin_tail(_env: EnvPtr, arguments: &[Expr]) -> Result<Expr, String> {
     if arguments.len() > 1 {
         return Err("too many arguments".into());
     }
@@ -131,7 +131,7 @@ fn builtin_tail(_env: &mut Env, arguments: &[Expr]) -> Result<Expr, String> {
     }
 }
 
-fn builtin_join(_env: &mut Env, arguments: &[Expr]) -> Result<Expr, String> {
+fn builtin_join(_env: EnvPtr, arguments: &[Expr]) -> Result<Expr, String> {
     let mut v = Vec::new();
 
     for arg in arguments.to_vec() {
@@ -147,7 +147,7 @@ fn builtin_join(_env: &mut Env, arguments: &[Expr]) -> Result<Expr, String> {
     Ok(Expr::QExpr(QExpr::new(v)))
 }
 
-fn builtin_eval(env: &mut Env, arguments: &[Expr]) -> Result<Expr, String> {
+fn builtin_eval(env: EnvPtr, arguments: &[Expr]) -> Result<Expr, String> {
     if arguments.len() > 1 {
         return Err("too many arguments".into());
     }
@@ -160,7 +160,7 @@ fn builtin_eval(env: &mut Env, arguments: &[Expr]) -> Result<Expr, String> {
     }
 }
 
-fn var(env: &mut Env, arguments: &[Expr], decl_kind: DeclKind) -> Result<Expr, String> {
+fn var(env: EnvPtr, arguments: &[Expr], decl_kind: DeclKind) -> Result<Expr, String> {
     if let Expr::QExpr(symbols) = arguments[0].clone() {
         let values = &arguments[1..];
         if symbols.len() != values.len() {
@@ -175,8 +175,8 @@ fn var(env: &mut Env, arguments: &[Expr], decl_kind: DeclKind) -> Result<Expr, S
         for (i, maybe_symbol) in symbols.to_vec().into_iter().enumerate() {
             if let Expr::Symbol(s) = maybe_symbol {
                 match decl_kind {
-                    DeclKind::Global => env.define_global(s, values[i].clone()),
-                    DeclKind::Local => env.define_local(s, values[i].clone()),
+                    DeclKind::Global => env.borrow_mut().define_global(s, values[i].clone()),
+                    DeclKind::Local => env.borrow_mut().define_local(s, values[i].clone()),
                 }
             } else {
                 return Err(format!("expected symbol, found {:?}", maybe_symbol));
@@ -191,25 +191,25 @@ fn var(env: &mut Env, arguments: &[Expr], decl_kind: DeclKind) -> Result<Expr, S
     }
 }
 
-fn builtin_def(env: &mut Env, arguments: &[Expr]) -> Result<Expr, String> {
+fn builtin_def(env: EnvPtr, arguments: &[Expr]) -> Result<Expr, String> {
     var(env, arguments, DeclKind::Global)
 }
 
-fn builtin_local_def(env: &mut Env, arguments: &[Expr]) -> Result<Expr, String> {
+fn builtin_local_def(env: EnvPtr, arguments: &[Expr]) -> Result<Expr, String> {
     var(env, arguments, DeclKind::Local)
 }
 
 
-fn builtin_lambda(env: &mut Env, arguments: &[Expr]) -> Result<Expr, String> {
+fn builtin_lambda(env_ptr: EnvPtr, arguments: &[Expr]) -> Result<Expr, String> {
     if arguments.len() != 2 {
         return Err(format!("expected 2 arguments, got {}", arguments.len()));
     }
 
     if let Expr::QExpr(params) = arguments[0].clone() {
         if let Expr::QExpr(body) = arguments[1].clone() {
-            debug!("builtin_lambda env: {:#?}", env);
+            debug!("builtin_lambda env: {:#?}", env_ptr.borrow());
             // Note: we're _cloning_ the parent environment here, not keeping a reference to it.
-            let lambda = try!(Lambda::new(params, body, Rc::new(RefCell::new(env.clone()))));
+            let lambda = try!(Lambda::new(params, body, env_ptr.clone()));
             Ok(Expr::Function(Function::Lambda(lambda)))
         } else {
             return Err(format!("expected Q-expression as second argument, found {:?}",
@@ -221,7 +221,7 @@ fn builtin_lambda(env: &mut Env, arguments: &[Expr]) -> Result<Expr, String> {
     }
 }
 
-fn builtin_if(env: &mut Env, arguments: &[Expr]) -> Result<Expr, String> {
+fn builtin_if(env: EnvPtr, arguments: &[Expr]) -> Result<Expr, String> {
     if arguments.len() > 3 {
         return Err(format!("expected at most 3 arguments, got {}", arguments.len()));
     }
@@ -270,26 +270,26 @@ fn builtin_if(env: &mut Env, arguments: &[Expr]) -> Result<Expr, String> {
 }
 
 
-fn builtin_less_than(env: &mut Env, arguments: &[Expr]) -> Result<Expr, String> {
+fn builtin_less_than(env: EnvPtr, arguments: &[Expr]) -> Result<Expr, String> {
     ord(env, arguments, CmpKind::LessThan)
 }
 
-fn builtin_lesser_than_or_equal(env: &mut Env, arguments: &[Expr]) -> Result<Expr, String> {
+fn builtin_lesser_than_or_equal(env: EnvPtr, arguments: &[Expr]) -> Result<Expr, String> {
     ord(env, arguments, CmpKind::LessThanOrEqual)
 }
 
 
-fn builtin_greater_than(env: &mut Env, arguments: &[Expr]) -> Result<Expr, String> {
+fn builtin_greater_than(env: EnvPtr, arguments: &[Expr]) -> Result<Expr, String> {
     ord(env, arguments, CmpKind::GreaterThan)
 }
 
-fn builtin_greater_than_or_equal(env: &mut Env, arguments: &[Expr]) -> Result<Expr, String> {
+fn builtin_greater_than_or_equal(env: EnvPtr, arguments: &[Expr]) -> Result<Expr, String> {
     ord(env, arguments, CmpKind::GreaterThanOrEqual)
 }
 
 
 // TODO: use bool instead of i64.
-fn ord(_env: &mut Env, arguments: &[Expr], cmp_kind: CmpKind) -> Result<Expr, String> {
+fn ord(_env: EnvPtr, arguments: &[Expr], cmp_kind: CmpKind) -> Result<Expr, String> {
     let a = match arguments[0].clone() {
         Expr::Integer(x) => x,
         other => return Err(format!("expected integer as first argument, found {:?}", other)),

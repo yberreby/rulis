@@ -8,10 +8,12 @@ use interpreter::eval_sexpr;
 use std::rc::Rc;
 use std::cell::RefCell;
 
+pub type EnvPtr = Rc<RefCell<Env>>;
+
 #[derive(Clone, Debug, PartialEq)]
 pub struct Env {
     own_map: HashMap<String, Expr>,
-    parent: Option<Rc<RefCell<Env>>>,
+    parent: Option<EnvPtr>,
 }
 
 impl Env {
@@ -83,7 +85,7 @@ impl Env {
     }
 }
 
-pub type InnerFunc = fn(&mut Env, &[Expr]) -> Result<Expr, String>;
+pub type InnerFunc = fn(EnvPtr, &[Expr]) -> Result<Expr, String>;
 
 pub enum Function {
     Builtin(InnerFunc),
@@ -92,7 +94,7 @@ pub enum Function {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Lambda {
-    local_env: Env,
+    local_env_ptr: EnvPtr,
     parameters: Vec<String>,
     body: QExpr,
 }
@@ -110,7 +112,7 @@ impl Lambda {
         }
 
         Ok(Lambda {
-            local_env: Env::with_parent(parent),
+            local_env_ptr: Rc::new(RefCell::new(Env::with_parent(parent))),
             parameters: symbol_parameters,
             body: body,
         })
@@ -134,11 +136,11 @@ impl Lambda {
 
             // Populate our local environment with the arguments, which are named by the
             // corresponding parameter name.
-            self.local_env.define_local(next_param, arg.clone());
+            self.local_env_ptr.borrow_mut().define_local(next_param, arg.clone());
         }
 
         if arguments.len() == total_parameter_count {
-            eval_sexpr(&mut self.local_env, &mut self.body)
+            eval_sexpr(self.local_env_ptr.clone(), &mut self.body)
         } else {
             assert!(arguments.len() < total_parameter_count,
                     "argument count should not be greater than or equal to parameter count at \
@@ -159,7 +161,7 @@ impl fmt::Display for Lambda {
                "(\\ {:?} {:?}); local environment: {:?}",
                self.parameters,
                self.body,
-               self.local_env.own_map)
+               self.local_env_ptr.borrow().own_map)
     }
 }
 
@@ -168,7 +170,7 @@ impl Function {
         Function::Builtin(f)
     }
 
-    pub fn call(&mut self, env: &mut Env, arguments: &[Expr]) -> Result<Expr, String> {
+    pub fn call(&mut self, env: EnvPtr, arguments: &[Expr]) -> Result<Expr, String> {
         match *self {
             // Lambdas should only have access to the environment in which they were defined.
             //
