@@ -112,7 +112,8 @@ fn conditionals_work() {
     let runs = vec![
         ("(if 1 {+ 1 2} {+ 5 6})", Expr::Integer(3)),
         ("(if 0 {+ 1 2} {+ 5 6})", Expr::Integer(11)),
-        ("(if 1 {0})", Expr::Integer(0)),
+        ("(if 1 {17})", Expr::Integer(17)),
+        ("(if 0 {17} {45})", Expr::Integer(45)),
     ];
 
     test_runs(runs.into_iter(), |x| x, |x| Ok(x));
