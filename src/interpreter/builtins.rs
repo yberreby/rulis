@@ -209,7 +209,8 @@ fn builtin_lambda(env: &mut Env, arguments: &[Expr]) -> Result<Expr, String> {
         if let Expr::QExpr(body) = arguments[1].clone() {
             debug!("builtin_lambda env: {:#?}", env);
             // Note: we're _cloning_ the parent environment here, not keeping a reference to it.
-            Ok(Expr::Function(Function::Lambda(try!(Lambda::new(params, body, Rc::new(RefCell::new(env.clone())))))))
+            let lambda = try!(Lambda::new(params, body, Rc::new(RefCell::new(env.clone()))));
+            Ok(Expr::Function(Function::Lambda(lambda)))
         } else {
             return Err(format!("expected Q-expression as second argument, found {:?}",
                                arguments[1]));
