@@ -29,9 +29,15 @@ impl Interpreter {
 
 pub fn eval_sexpr(env_ptr: EnvPtr, sexpr: &mut [Expr]) -> Result<Expr, String> {
     debug!("eval sexpr: {:?}", sexpr);
-    if sexpr.len() == 0 {
-        return Ok(Expr::SExpr(SExpr::empty()));
-    }
+
+    match sexpr.len() {
+        0 => return Ok(Expr::SExpr(SExpr::empty())),
+        1 => {
+            // XXX: clone
+            return Ok(try!(eval_expr(env_ptr, &mut sexpr[0].clone())));
+        }
+        _ => {}
+    };
 
     for operand in sexpr.iter_mut() {
         *operand = try!(eval_expr(env_ptr.clone(), operand));

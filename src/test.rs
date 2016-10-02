@@ -1,4 +1,4 @@
-use value::{Expr, QExpr};
+use value::*;
 use eval;
 use std::fmt::Debug;
 use Interpreter;
@@ -108,12 +108,11 @@ fn fun_works() {
 }
 
 #[test]
-#[ignore]
 fn conditionals_work() {
     let runs = vec![
         ("(if 1 {+ 1 2} {+ 5 6})", Expr::Integer(3)),
         ("(if 0 {+ 1 2} {+ 5 6})", Expr::Integer(11)),
-        ("(if 1 {0})", Expr::QExpr(QExpr::new(vec![Expr::Integer(0)]))),
+        ("(if 1 {0})", Expr::Integer(0)),
     ];
 
     test_runs(runs.into_iter(), |x| x, |x| Ok(x));

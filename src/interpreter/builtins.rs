@@ -1,4 +1,4 @@
-use value::{Expr, SExpr, QExpr, EnvPtr, Function, InnerFunc, Lambda};
+use value::*;
 use super::eval_sexpr;
 
 // TODO: clean up error handling in this module. It's a mess.
@@ -223,7 +223,6 @@ fn builtin_if(env: EnvPtr, arguments: &[Expr]) -> Result<Expr, String> {
     if arguments.len() > 3 {
         return Err(format!("expected at most 3 arguments, got {}", arguments.len()));
     }
-
 
     if let Expr::Integer(test) = arguments[0].clone() {
         let mut then_expr: QExpr = match arguments[1].clone() {
