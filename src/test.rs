@@ -1,4 +1,4 @@
-use value::{Expr, SExpr};
+use value::*;
 use eval;
 use std::fmt::Debug;
 use Interpreter;
@@ -36,7 +36,9 @@ fn test_runs<'a,
 
 #[test]
 fn incorrect_code_is_rejected_and_doesnt_cause_panics() {
-    let sources = vec!["(def {a b c} {+ (* a c) b})", "(+ 5 ((* 2 428))"];
+    let sources = vec!["(def {a b c} {+ (* a c) b})", "(+ 5 ((* 2 428))", "(+ 5 {})",
+    //":"
+    ];
 
     for src in &sources {
         assert!(eval(src).is_err());
@@ -92,14 +94,50 @@ fn lambdas_work() {
 
 
 #[test]
-fn fun_segfault_1() {
+fn fun_works() {
     let runs = vec![
 (r"
 (def {fun} (\ {args body} {def (head args) (\ (tail args) body)}))
-(fun {add a b} {+ a b})",
-                     Expr::SExpr(SExpr::empty())),
+(fun {add a b} {+ a b})
+(add 5 7)",
+                     Expr::Integer(12)),
 
     ];
 
     test_runs(runs.into_iter(), |x| x, |x| Ok(x));
+}
+
+#[test]
+fn conditionals_work() {
+    let runs = vec![
+        ("(if 1 {+ 1 2} {+ 5 6})", Expr::Integer(3)),
+        ("(if 0 {+ 1 2} {+ 5 6})", Expr::Integer(11)),
+        ("(if 1 {17})", Expr::Integer(17)),
+        ("(if 0 {17} {45})", Expr::Integer(45)),
+    ];
+
+    test_runs(runs.into_iter(), |x| x, |x| Ok(x));
+}
+
+#[test]
+fn comparison_operators_work() {
+    let runs = vec![
+        ("(<= 5 7)", 1),
+        ("(>= 5 7)", 0),
+        ("(<= 8 8)", 1),
+        ("(>= 8 8)", 1),
+        ("(< 5 7)", 1),
+        ("(< 7 5)", 0),
+        ("(> 5 7)", 0),
+        ("(> 7 5)", 1),
+        ("(> 10 5)", 1),
+        ("(<= 88 5)", 0),
+        ("(== 5 6)", 0),
+        ("(== 5 {})", 0),
+        ("(== 1 1)", 1),
+        ("(!= {} 56)", 1),
+        ("(== {1 2 3 {5 6}} {1   2  3   {5 6}})", 1),
+    ];
+
+    test_runs(runs.into_iter(), |x| x, |x| Ok(Expr::Integer(x)));
 }
