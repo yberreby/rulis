@@ -63,17 +63,19 @@ impl Env {
             // `e` cannot be null when it is first defined because `self` is guaranteed not to be
             // null.
             let mut e = self as *mut Env;
+            println!("e: {:p}", e);
+            println!("parent: {:#?}", (*e).parent);
 
-            while let Some(ref mut p) = (*e).parent {
-                match p.borrow_mut().parent.as_ref() {
-                    Some(ref mut parent) => {
-                        e = parent.as_ptr();
-                    }
-                    None => break,
-                }
+            while let Some(ref mut parent) = (*e).parent {
+                println!("inside while");
+                println!("e before as_ptr: {:p}", e);
+                e = (**parent).as_ptr();
+                println!("e after as_ptr: {:p}", e);
             }
             // `e` should now be the top-level environment (i.e. the global env).
             (*e).define_local(key, value);
+
+            println!("e: {:p}", e);
         }
 
 
