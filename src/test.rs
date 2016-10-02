@@ -94,12 +94,13 @@ fn lambdas_work() {
 
 
 #[test]
-fn fun_segfault_1() {
+fn fun_works() {
     let runs = vec![
 (r"
 (def {fun} (\ {args body} {def (head args) (\ (tail args) body)}))
-(fun {add a b} {+ a b})",
-                     Expr::SExpr(SExpr::empty())),
+(fun {add a b} {+ a b})
+(add 5 7)",
+                     Expr::Integer(12)),
 
     ];
 
