@@ -186,7 +186,7 @@ impl<R: Iterator<Item = Token>> Parser<R> {
         let mut chars = lit.chars();
         let mut negative = false;
 
-        if lit.chars().next() == Some('-') {
+        if lit.starts_with("-") {
             negative = true;
             chars.next().unwrap();
         }

@@ -71,7 +71,7 @@ impl Env {
     }
 }
 
-pub type InnerFunc = fn(EnvPtr, &[Expr]) -> Result<Expr, String>;
+pub type InnerFunc = fn(EnvPtr, Vec<Expr>) -> Result<Expr, String>;
 
 pub enum Function {
     Builtin(InnerFunc),
@@ -104,7 +104,7 @@ impl Lambda {
         })
     }
 
-    pub fn call(&mut self, arguments: &[Expr]) -> Result<Expr, String> {
+    pub fn call(&mut self, arguments: Vec<Expr>) -> Result<Expr, String> {
         let total_parameter_count = self.parameters.len();
 
         if arguments.len() > self.parameters.len() {
@@ -126,7 +126,7 @@ impl Lambda {
         }
 
         if arguments.len() == total_parameter_count {
-            eval_sexpr(self.local_env_ptr.clone(), &mut self.body)
+            eval_sexpr(self.local_env_ptr.clone(), self.body.exprs.clone())
         } else {
             assert!(arguments.len() < total_parameter_count,
                     "argument count should not be greater than or equal to parameter count at \
@@ -158,7 +158,7 @@ impl Function {
         Function::Builtin(f)
     }
 
-    pub fn call(&mut self, env: EnvPtr, arguments: &[Expr]) -> Result<Expr, String> {
+    pub fn call(&mut self, env: EnvPtr, arguments: Vec<Expr>) -> Result<Expr, String> {
         match *self {
             // Lambdas should only have access to the environment in which they were defined.
             //

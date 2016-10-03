@@ -51,7 +51,7 @@ fn add_builtin(env: EnvPtr, name: String, value: Expr) {
 }
 
 
-pub fn arithmetic_operation(operator: &str, arguments: &[Expr]) -> Result<Expr, String> {
+pub fn arithmetic_operation(operator: &str, arguments: Vec<Expr>) -> Result<Expr, String> {
     let numeric_arguments_res: Result<Vec<i64>, String> = arguments.iter()
         .map(|e| e.as_i64().ok_or_else(|| "arguments should all be numbers".into()))
         .collect();
@@ -83,29 +83,29 @@ pub fn arithmetic_operation(operator: &str, arguments: &[Expr]) -> Result<Expr, 
     Ok(Expr::Integer(result))
 }
 
-fn builtin_add(_env: EnvPtr, arguments: &[Expr]) -> Result<Expr, String> {
+fn builtin_add(_env: EnvPtr, arguments: Vec<Expr>) -> Result<Expr, String> {
     arithmetic_operation("+", arguments)
 }
 
-fn builtin_sub(_env: EnvPtr, arguments: &[Expr]) -> Result<Expr, String> {
+fn builtin_sub(_env: EnvPtr, arguments: Vec<Expr>) -> Result<Expr, String> {
     arithmetic_operation("-", arguments)
 }
 
-fn builtin_mul(_env: EnvPtr, arguments: &[Expr]) -> Result<Expr, String> {
+fn builtin_mul(_env: EnvPtr, arguments: Vec<Expr>) -> Result<Expr, String> {
     arithmetic_operation("*", arguments)
 }
 
-fn builtin_div(_env: EnvPtr, arguments: &[Expr]) -> Result<Expr, String> {
+fn builtin_div(_env: EnvPtr, arguments: Vec<Expr>) -> Result<Expr, String> {
     arithmetic_operation("/", arguments)
 }
 
 
-fn builtin_list(_env: EnvPtr, arguments: &[Expr]) -> Result<Expr, String> {
+fn builtin_list(_env: EnvPtr, arguments: Vec<Expr>) -> Result<Expr, String> {
     Ok(Expr::QExpr(QExpr::new(arguments.into())))
 }
 
-/// head returns a QExpr containing one element, the first element of the qexpr it was passed.
-fn builtin_head(_env: EnvPtr, arguments: &[Expr]) -> Result<Expr, String> {
+/// `head` returns a `QExpr` containing one element, the first element of the qexpr it was passed.
+fn builtin_head(_env: EnvPtr, arguments: Vec<Expr>) -> Result<Expr, String> {
     if arguments.len() > 1 {
         return Err("too many arguments".into());
     }
@@ -118,7 +118,7 @@ fn builtin_head(_env: EnvPtr, arguments: &[Expr]) -> Result<Expr, String> {
     }
 }
 
-fn builtin_tail(_env: EnvPtr, arguments: &[Expr]) -> Result<Expr, String> {
+fn builtin_tail(_env: EnvPtr, arguments: Vec<Expr>) -> Result<Expr, String> {
     if arguments.len() > 1 {
         return Err("too many arguments".into());
     }
@@ -131,7 +131,7 @@ fn builtin_tail(_env: EnvPtr, arguments: &[Expr]) -> Result<Expr, String> {
     }
 }
 
-fn builtin_join(_env: EnvPtr, arguments: &[Expr]) -> Result<Expr, String> {
+fn builtin_join(_env: EnvPtr, arguments: Vec<Expr>) -> Result<Expr, String> {
     let mut v = Vec::new();
 
     for arg in arguments.to_vec() {
@@ -147,20 +147,20 @@ fn builtin_join(_env: EnvPtr, arguments: &[Expr]) -> Result<Expr, String> {
     Ok(Expr::QExpr(QExpr::new(v)))
 }
 
-fn builtin_eval(env: EnvPtr, arguments: &[Expr]) -> Result<Expr, String> {
+fn builtin_eval(env: EnvPtr, arguments: Vec<Expr>) -> Result<Expr, String> {
     if arguments.len() > 1 {
         return Err("too many arguments".into());
     }
 
-    if let Expr::QExpr(mut qexpr) = arguments[0].clone() {
+    if let Expr::QExpr(qexpr) = arguments[0].clone() {
         debug!("eval qexpr: {}", qexpr);
-        eval_sexpr(env, &mut qexpr)
+        eval_sexpr(env, qexpr.exprs)
     } else {
         return Err("type error, expected Q-Expression".into());
     }
 }
 
-fn var(env: EnvPtr, arguments: &[Expr], decl_kind: DeclKind) -> Result<Expr, String> {
+fn var(env: EnvPtr, arguments: Vec<Expr>, decl_kind: DeclKind) -> Result<Expr, String> {
     if let Expr::QExpr(symbols) = arguments[0].clone() {
         let values = &arguments[1..];
         if symbols.len() != values.len() {
@@ -191,16 +191,16 @@ fn var(env: EnvPtr, arguments: &[Expr], decl_kind: DeclKind) -> Result<Expr, Str
     }
 }
 
-fn builtin_def(env: EnvPtr, arguments: &[Expr]) -> Result<Expr, String> {
+fn builtin_def(env: EnvPtr, arguments: Vec<Expr>) -> Result<Expr, String> {
     var(env, arguments, DeclKind::Global)
 }
 
-fn builtin_local_def(env: EnvPtr, arguments: &[Expr]) -> Result<Expr, String> {
+fn builtin_local_def(env: EnvPtr, arguments: Vec<Expr>) -> Result<Expr, String> {
     var(env, arguments, DeclKind::Local)
 }
 
 
-fn builtin_lambda(env_ptr: EnvPtr, arguments: &[Expr]) -> Result<Expr, String> {
+fn builtin_lambda(env_ptr: EnvPtr, arguments: Vec<Expr>) -> Result<Expr, String> {
     if arguments.len() != 2 {
         return Err(format!("expected 2 arguments, got {}", arguments.len()));
     }
@@ -221,13 +221,13 @@ fn builtin_lambda(env_ptr: EnvPtr, arguments: &[Expr]) -> Result<Expr, String> {
     }
 }
 
-fn builtin_if(env: EnvPtr, arguments: &[Expr]) -> Result<Expr, String> {
+fn builtin_if(env: EnvPtr, mut arguments: Vec<Expr>) -> Result<Expr, String> {
     if arguments.len() > 3 {
         return Err(format!("expected at most 3 arguments, got {}", arguments.len()));
     }
 
-    if let Expr::Integer(test) = arguments[0].clone() {
-        let mut then_expr: QExpr = match arguments[1].clone() {
+    if let Expr::Integer(test) = arguments.remove(0) {
+        let then_expr: QExpr = match arguments.remove(0) {
             Expr::QExpr(q) => q,
             found => {
                 return Err(format!("expected Q-expression as second argument, found {:?}",
@@ -235,7 +235,7 @@ fn builtin_if(env: EnvPtr, arguments: &[Expr]) -> Result<Expr, String> {
             }
         };
 
-        let mut else_expr_opt: Option<QExpr> = match arguments.get(2).cloned() {
+        let else_expr_opt: Option<QExpr> = match arguments.get(0).cloned() { // XXX clone
             Some(Expr::QExpr(q)) => Some(q),
             Some(found) => {
                 return Err(format!("expected Q-expression as second argument, found {:?}",
@@ -245,14 +245,12 @@ fn builtin_if(env: EnvPtr, arguments: &[Expr]) -> Result<Expr, String> {
         };
 
         if test != 0 {
-            eval_sexpr(env, &mut then_expr)
+            eval_sexpr(env, then_expr.exprs)
+        } else if let Some(q) = else_expr_opt {
+            eval_sexpr(env, q.exprs)
         } else {
-            if let Some(ref mut q) = else_expr_opt {
-                eval_sexpr(env, q)
-            } else {
-                // If no else expression was supplied and the condition is not true, we do nothing.
-                Ok(Expr::SExpr(SExpr::empty()))
-            }
+            // If no else expression was supplied and the condition is not true, we do nothing.
+            Ok(Expr::SExpr(SExpr::empty()))
         }
     } else {
         return Err(format!("expected integer as first argument, found {:?}",
@@ -261,40 +259,40 @@ fn builtin_if(env: EnvPtr, arguments: &[Expr]) -> Result<Expr, String> {
 }
 
 
-fn builtin_less_than(env: EnvPtr, arguments: &[Expr]) -> Result<Expr, String> {
+fn builtin_less_than(env: EnvPtr, arguments: Vec<Expr>) -> Result<Expr, String> {
     ord(env, arguments, CmpKind::LessThan)
 }
 
-fn builtin_lesser_than_or_equal(env: EnvPtr, arguments: &[Expr]) -> Result<Expr, String> {
+fn builtin_lesser_than_or_equal(env: EnvPtr, arguments: Vec<Expr>) -> Result<Expr, String> {
     ord(env, arguments, CmpKind::LessThanOrEqual)
 }
 
-fn builtin_greater_than(env: EnvPtr, arguments: &[Expr]) -> Result<Expr, String> {
+fn builtin_greater_than(env: EnvPtr, arguments: Vec<Expr>) -> Result<Expr, String> {
     ord(env, arguments, CmpKind::GreaterThan)
 }
 
-fn builtin_greater_than_or_equal(env: EnvPtr, arguments: &[Expr]) -> Result<Expr, String> {
+fn builtin_greater_than_or_equal(env: EnvPtr, arguments: Vec<Expr>) -> Result<Expr, String> {
     ord(env, arguments, CmpKind::GreaterThanOrEqual)
 }
 
-fn builtin_is_eq(_env: EnvPtr, arguments: &[Expr]) -> Result<Expr, String> {
+fn builtin_is_eq(_env: EnvPtr, arguments: Vec<Expr>) -> Result<Expr, String> {
     let b = arguments[0] == arguments[1];
     Ok(Expr::Integer(b as i64))
 }
 
-fn builtin_is_not_eq(_env: EnvPtr, arguments: &[Expr]) -> Result<Expr, String> {
+fn builtin_is_not_eq(_env: EnvPtr, arguments: Vec<Expr>) -> Result<Expr, String> {
     let b = arguments[0] != arguments[1];
     Ok(Expr::Integer(b as i64))
 }
 
 // TODO: use bool instead of i64.
-fn ord(_env: EnvPtr, arguments: &[Expr], cmp_kind: CmpKind) -> Result<Expr, String> {
-    let a = match arguments[0].clone() {
+fn ord(_env: EnvPtr, mut arguments: Vec<Expr>, cmp_kind: CmpKind) -> Result<Expr, String> {
+    let a = match arguments.remove(0) {
         Expr::Integer(x) => x,
         other => return Err(format!("expected integer as first argument, found {:?}", other)),
     };
 
-    let b = match arguments[1].clone() {
+    let b = match arguments.remove(0) {
         Expr::Integer(x) => x,
         other => return Err(format!("expected integer as first argument, found {:?}", other)),
     };
