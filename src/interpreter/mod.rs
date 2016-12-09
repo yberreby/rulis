@@ -28,27 +28,29 @@ impl Interpreter {
 pub fn eval_sexpr(env_ptr: EnvPtr, mut sexpr: Vec<Expr>) -> Result<Expr, String> {
     debug!("eval sexpr: {:?}", sexpr);
 
-    match sexpr.len() {
-        0 => return Ok(Expr::SExpr(SExpr::empty())),
-        1 => {
-            // XXX: clone
-            return Ok(try!(eval_expr(env_ptr, sexpr[0].clone())));
+    ::stacker::maybe_grow(64 * 1024, 1024 * 1024, || {
+        match sexpr.len() {
+            0 => return Ok(Expr::SExpr(SExpr::empty())),
+            1 => {
+                // XXX: clone
+                return Ok(try!(eval_expr(env_ptr, sexpr[0].clone())));
+            }
+            _ => {}
+        };
+
+        for operand in &mut sexpr {
+            *operand = try!(eval_expr(env_ptr.clone(), operand.clone())); // XXX: avoid cloning operand
         }
-        _ => {}
-    };
 
-    for operand in &mut sexpr {
-        *operand = try!(eval_expr(env_ptr.clone(), operand.clone())); // XXX: avoid cloning operand
-    }
+        let operator = sexpr.remove(0);
+        let arguments = sexpr;
 
-    let operator = sexpr.remove(0);
-    let arguments = sexpr;
-
-    if let Expr::Function(mut f) = operator {
-        f.call(env_ptr.clone(), arguments)
-    } else {
-        Err(format!("first element should be function, but was {:?}", operator))
-    }
+        if let Expr::Function(mut f) = operator {
+            f.call(env_ptr.clone(), arguments)
+        } else {
+            Err(format!("first element should be function, but was {:?}", operator))
+        }
+    })
 }
 
 

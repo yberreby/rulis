@@ -1,6 +1,7 @@
 #[macro_use]
 extern crate log;
 extern crate num;
+extern crate stacker;
 
 mod parser;
 mod value;
