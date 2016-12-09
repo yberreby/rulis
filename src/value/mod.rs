@@ -8,66 +8,73 @@ use std::cell::RefCell;
 use std::collections::HashMap;
 use interpreter::eval_sexpr;
 
-pub type EnvPtr = Rc<RefCell<Env>>;
+#[derive(Clone, Debug, PartialEq)]
+pub struct EnvPtr {
+    ptr: Rc<RefCell<EnvInner>>,
+}
 
 #[derive(Clone, Debug, PartialEq)]
-pub struct Env {
+pub struct EnvInner {
     own_map: HashMap<String, Expr>,
     parent: Option<EnvPtr>,
 }
 
-impl Env {
-    pub fn empty() -> Env {
-        Env {
-            own_map: HashMap::new(),
-            parent: None,
+impl EnvPtr {
+    pub fn empty() -> EnvPtr {
+        EnvPtr {
+            ptr: Rc::new(RefCell::new(EnvInner {
+                own_map: HashMap::new(),
+                parent: None,
+            })),
         }
     }
 
-    pub fn with_parent(parent: Rc<RefCell<Env>>) -> Env {
-        Env {
-            own_map: HashMap::new(),
-            parent: Some(parent),
+    pub fn with_parent(parent: EnvPtr) -> EnvPtr {
+        EnvPtr {
+            ptr: Rc::new(RefCell::new(EnvInner {
+                own_map: HashMap::new(),
+                parent: Some(parent),
+            })),
         }
     }
 
     pub fn get(&self, key: &str) -> Option<Expr> {
-        self.own_map
+        self.ptr
+            .borrow()
+            .own_map
             .get(key)
             .cloned()
             .or_else(|| {
-                self.parent
+                self.ptr
+                    .borrow()
+                    .parent
                     .as_ref()
-                    .and_then(|p| p.borrow().get(key))
+                    .and_then(|p| p.get(key))
             })
     }
 
-    pub fn define_local<K: Into<String>>(&mut self, key: K, value: Expr) {
-        self.own_map.insert(key.into(), value);
+    /// Return either the topmost environment in `self`'s lineage, or `self` if
+    /// `self` had no parents.
+    pub fn top_level_env(&self) -> EnvPtr {
+        let mut e: EnvPtr = self.clone();
+
+        loop {
+            // This `let` binding is required for `parent` to live long enough.
+            let parent = e.ptr.borrow().parent.clone();
+            if let Some(ref parent_ptr) = parent {
+                e = parent_ptr.clone();
+            } else {
+                return e;
+            }
+        }
     }
 
-    pub fn define_global<K: Into<String>>(&mut self, key: K, value: Expr) {
-        let key = key.into();
-        // I couldn't find a way to way this work in safe code that wasn't stupidly
-        // inefficient and / or plainly incorrect. Improvements welcome!
-        //
-        // My knowledge of unsafe Rust being limited, the following note represents my
-        // understanding of the situation, but may be incorrect.
-        //
-        // SAFETY: this function mutably borrows `self`, therefore `self` is guaranteed not be
-        // aliased. Only one mutable borrow to a part of `self`, apart from `self` itself, exists
-        // at once in the form of the `e` raw pointer.
-        unsafe {
-            // `e` cannot be null when it is first defined because `self` is guaranteed not to be
-            // null.
-            let mut e = self as *mut Env;
+    pub fn define_local<K: Into<String>>(&self, key: K, value: Expr) {
+        self.ptr.borrow_mut().own_map.insert(key.into(), value);
+    }
 
-            while let Some(ref mut parent) = (*e).parent {
-                e = (**parent).as_ptr();
-            }
-            // `e` should now be the top-level environment (i.e. the global env).
-            (*e).define_local(key, value);
-        }
+    pub fn define_global<K: Into<String>>(&self, key: K, value: Expr) {
+        self.top_level_env().define_local(key, value);
     }
 }
 
@@ -86,7 +93,7 @@ pub struct Lambda {
 }
 
 impl Lambda {
-    pub fn new(parameters: QExpr, body: QExpr, parent: Rc<RefCell<Env>>) -> Result<Lambda, String> {
+    pub fn new(parameters: QExpr, body: QExpr, parent: EnvPtr) -> Result<Lambda, String> {
         let mut symbol_parameters = Vec::new();
 
         for param in parameters.exprs {
@@ -98,7 +105,7 @@ impl Lambda {
         }
 
         Ok(Lambda {
-            local_env_ptr: Rc::new(RefCell::new(Env::with_parent(parent))),
+            local_env_ptr: EnvPtr::with_parent(parent),
             parameters: symbol_parameters,
             body: body,
         })
@@ -122,7 +129,7 @@ impl Lambda {
 
             // Populate our local environment with the arguments, which are named by the
             // corresponding parameter name.
-            self.local_env_ptr.borrow_mut().define_local(next_param, arg.clone());
+            self.local_env_ptr.define_local(next_param, arg.clone());
         }
 
         if arguments.len() == total_parameter_count {
@@ -143,13 +150,11 @@ impl Lambda {
 
 impl fmt::Display for Lambda {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        unsafe {
-            write!(f,
-                   "(\\ {:?} {:?}); own_map: {:?}",
-                   self.parameters,
-                   self.body,
-                   (*self.local_env_ptr.as_ptr()).own_map)
-        }
+        write!(f,
+               "(\\ {:?} {:?}); own_map: {:?}",
+               self.parameters,
+               self.body,
+               self.local_env_ptr.ptr.borrow().own_map)
     }
 }
 

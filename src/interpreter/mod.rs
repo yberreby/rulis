@@ -1,7 +1,5 @@
 mod builtins;
-use value::{Expr, SExpr, Env, EnvPtr};
-use std::rc::Rc;
-use std::cell::RefCell;
+use value::{Expr, SExpr, EnvPtr};
 
 pub struct Interpreter {
     /// The environment maps defined symbols to values.
@@ -10,7 +8,7 @@ pub struct Interpreter {
 
 impl Interpreter {
     pub fn new() -> Interpreter {
-        let env_ptr = Rc::new(RefCell::new(Env::empty()));
+        let env_ptr = EnvPtr::empty();
         builtins::add_builtins(env_ptr.clone());
 
         Interpreter { global_env_ptr: env_ptr }
@@ -61,8 +59,7 @@ fn eval_expr(env_ptr: EnvPtr, expr: Expr) -> Result<Expr, String> {
         Expr::Function(_) => Ok(expr.clone()),
 
         Expr::Symbol(ref symbol) => {
-            let val = try!(env_ptr.borrow()
-                .get(&*symbol)
+            let val = try!(env_ptr.get(&*symbol)
                 .ok_or_else(|| format!("undefined symbol: {}", symbol)));
             Ok(val.clone())
         }
