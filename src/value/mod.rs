@@ -57,12 +57,17 @@ impl EnvPtr {
     /// `self` had no parents.
     pub fn top_level_env(&self) -> EnvPtr {
         let mut e: EnvPtr = self.clone();
-        while let Some(ref parent_ptr) = self.ptr.borrow().parent {
-            // Note that we're cloning a ref-counted pointer here. Not an environment.
-            e = parent_ptr.clone();
-        }
 
-        e
+        loop {
+            let e_copy = e.clone();
+            let parent = e_copy.ptr.borrow().parent.clone();
+            if let Some(ref parent_ptr) = parent {
+                // Note that we're cloning a ref-counted pointer here. Not an environment.
+                e = parent_ptr.clone();
+            } else {
+                return e;
+            }
+        }
     }
 
     pub fn define_local<K: Into<String>>(&self, key: K, value: Expr) {

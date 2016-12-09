@@ -1,7 +1,5 @@
 mod builtins;
 use value::{Expr, SExpr, EnvPtr};
-use std::rc::Rc;
-use std::cell::RefCell;
 
 pub struct Interpreter {
     /// The environment maps defined symbols to values.
