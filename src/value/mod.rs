@@ -59,10 +59,9 @@ impl EnvPtr {
         let mut e: EnvPtr = self.clone();
 
         loop {
-            let e_copy = e.clone();
-            let parent = e_copy.ptr.borrow().parent.clone();
+            // This `let` binding is required for `parent` to live long enough.
+            let parent = e.ptr.borrow().parent.clone();
             if let Some(ref parent_ptr) = parent {
-                // Note that we're cloning a ref-counted pointer here. Not an environment.
                 e = parent_ptr.clone();
             } else {
                 return e;
