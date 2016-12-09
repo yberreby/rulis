@@ -163,3 +163,10 @@ fn recursion_works() {
 
     test_runs(runs.into_iter(), |x| x, |x| Ok(Expr::Integer(x)));
 }
+
+
+
+// Recursion limit test & micro-benchmark:
+//
+// (def {f} (\ {x acc} { if (== x 0) {acc} {f (- x 1) (+ acc 1)} }))
+// (f 10000 0)
