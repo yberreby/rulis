@@ -47,26 +47,10 @@ impl Env {
     }
 
     pub fn define_global<K: Into<String>>(&mut self, key: K, value: Expr) {
-        let key = key.into();
-        // I couldn't find a way to way this work in safe code that wasn't stupidly
-        // inefficient and / or plainly incorrect. Improvements welcome!
-        //
-        // My knowledge of unsafe Rust being limited, the following note represents my
-        // understanding of the situation, but may be incorrect.
-        //
-        // SAFETY: this function mutably borrows `self`, therefore `self` is guaranteed not be
-        // aliased. Only one mutable borrow to a part of `self`, apart from `self` itself, exists
-        // at once in the form of the `e` raw pointer.
-        unsafe {
-            // `e` cannot be null when it is first defined because `self` is guaranteed not to be
-            // null.
-            let mut e = self as *mut Env;
-
-            while let Some(ref mut parent) = (*e).parent {
-                e = (**parent).as_ptr();
-            }
-            // `e` should now be the top-level environment (i.e. the global env).
-            (*e).define_local(key, value);
+        if let Some(ref mut parent) = self.parent {
+            parent.borrow_mut().define_global(key, value);
+        } else {
+            self.define_local(key, value);
         }
     }
 }
