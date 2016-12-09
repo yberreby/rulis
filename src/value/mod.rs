@@ -8,31 +8,40 @@ use std::cell::RefCell;
 use std::collections::HashMap;
 use interpreter::eval_sexpr;
 
-pub type EnvPtr = Rc<RefCell<Env>>;
+#[derive(Clone, Debug, PartialEq)]
+pub struct EnvRef {
+    ptr: Rc<RefCell<EnvInner>>,
+}
 
 #[derive(Clone, Debug, PartialEq)]
-pub struct Env {
+pub struct EnvInner {
     own_map: HashMap<String, Expr>,
     parent: Option<EnvPtr>,
 }
 
 impl Env {
-    pub fn empty() -> Env {
-        Env {
-            own_map: HashMap::new(),
-            parent: None,
+    pub fn empty() -> EnvRef {
+        EnvRef {
+            ptr: Rc::new(RefCell::new(EnvInner {
+                own_map: HashMap::new(),
+                parent: None,
+            })),
         }
     }
 
-    pub fn with_parent(parent: Rc<RefCell<Env>>) -> Env {
-        Env {
-            own_map: HashMap::new(),
-            parent: Some(parent),
+    pub fn with_parent(parent: EnvRef) -> EnvRef {
+        EnvRef {
+            ptr: Rc::new(RefCell::new(EnvInner {
+                own_map: HashMap::new(),
+                parent: Some(parent),
+            })),
         }
     }
 
     pub fn get(&self, key: &str) -> Option<Expr> {
-        self.own_map
+        self.ptr
+            .borrow()
+            .own_map
             .get(key)
             .cloned()
             .or_else(|| {
@@ -42,13 +51,25 @@ impl Env {
             })
     }
 
+    /// Return either the topmost environment in `self`'s lineage, or `self` if
+    /// `self` had no parents.
+    pub fn top_level_env(&self) -> EnvRef {
+        let mut e: EnvRef = self.clone();
+        while let Some(ref parent_ptr) = self.ptr.borrow().parent {
+            // Note that we're cloning a ref-counted pointer here. Not an environment.
+            e = Some(parent_ptr.clone());
+        }
+
+        e
+    }
+
     pub fn define_local<K: Into<String>>(&mut self, key: K, value: Expr) {
         self.own_map.insert(key.into(), value);
     }
 
     pub fn define_global<K: Into<String>>(&mut self, key: K, value: Expr) {
-        if let Some(ref mut parent) = self.parent {
-            parent.borrow_mut().define_global(key, value);
+        if let Some(top_level_env) = self.top_level_env() {
+            top_level_env.borrow_mut().define_local(key, value);
         } else {
             self.define_local(key, value);
         }
