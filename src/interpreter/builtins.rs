@@ -47,7 +47,7 @@ fn add_builtin_fn<S: Into<String>>(env: EnvPtr, name: S, f: InnerFunc) {
 }
 
 fn add_builtin(env: EnvPtr, name: String, value: Expr) {
-    env.borrow_mut().define_local(name, value);
+    env.define_local(name, value);
 }
 
 
@@ -175,8 +175,8 @@ fn var(env: EnvPtr, arguments: Vec<Expr>, decl_kind: DeclKind) -> Result<Expr, S
         for (i, maybe_symbol) in symbols.to_vec().into_iter().enumerate() {
             if let Expr::Symbol(s) = maybe_symbol {
                 match decl_kind {
-                    DeclKind::Global => env.borrow_mut().define_global(s, values[i].clone()),
-                    DeclKind::Local => env.borrow_mut().define_local(s, values[i].clone()),
+                    DeclKind::Global => env.define_global(s, values[i].clone()),
+                    DeclKind::Local => env.define_local(s, values[i].clone()),
                 }
             } else {
                 return Err(format!("expected symbol, found {:?}", maybe_symbol));
@@ -207,7 +207,7 @@ fn builtin_lambda(env_ptr: EnvPtr, arguments: Vec<Expr>) -> Result<Expr, String>
 
     if let Expr::QExpr(params) = arguments[0].clone() {
         if let Expr::QExpr(body) = arguments[1].clone() {
-            debug!("builtin_lambda env: {:#?}", env_ptr.borrow());
+            debug!("builtin_lambda env: {:#?}", env_ptr);
             // Note: we're _cloning_ the parent environment here, not keeping a reference to it.
             let lambda = try!(Lambda::new(params, body, env_ptr.clone()));
             Ok(Expr::Function(Function::Lambda(lambda)))
